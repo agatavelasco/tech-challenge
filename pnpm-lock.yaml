@@ -217,6 +217,9 @@ importers:
       '@tech-challenge/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@tech-challenge/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
       kafkajs:
         specifier: ^2.2.4
         version: 2.2.4

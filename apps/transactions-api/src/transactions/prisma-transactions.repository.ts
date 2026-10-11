@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type {
   CreateTransactionInput,
+  ResolvedTransactionStatus,
   TransactionStatus,
   TransferType,
 } from '@tech-challenge/contracts';
@@ -9,7 +10,12 @@ import {
   type Prisma,
 } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import type { PageRequest, TransactionFilters, TransactionRecord } from './transaction-record.js';
+import type {
+  OutboxMessage,
+  PageRequest,
+  TransactionFilters,
+  TransactionRecord,
+} from './transaction-record.js';
 import { TransactionsRepository } from './transactions.repository.js';
 
 const STATUS_TO_DB: Record<TransactionStatus, DbTransactionStatus> = {
@@ -58,17 +64,41 @@ export class PrismaTransactionsRepository extends TransactionsRepository {
     super();
   }
 
-  async create(input: CreateTransactionInput): Promise<TransactionRecord> {
-    const row = await this.prisma.transaction.create({
-      data: {
-        accountExternalIdDebit: input.accountExternalIdDebit,
-        accountExternalIdCredit: input.accountExternalIdCredit,
-        transferTypeId: input.transferTypeId,
-        value: input.value,
-      },
-      include: withTransferType,
+  async create(
+    input: CreateTransactionInput,
+    eventFor: (record: TransactionRecord) => OutboxMessage,
+  ): Promise<TransactionRecord> {
+    return this.prisma.$transaction(async (tx) => {
+      const row = await tx.transaction.create({
+        data: {
+          accountExternalIdDebit: input.accountExternalIdDebit,
+          accountExternalIdCredit: input.accountExternalIdCredit,
+          transferTypeId: input.transferTypeId,
+          value: input.value,
+        },
+        include: withTransferType,
+      });
+      const record = toRecord(row);
+      const event = eventFor(record);
+
+      await tx.outboxEvent.create({
+        data: {
+          id: event.eventId,
+          topic: event.topic,
+          messageKey: event.key,
+          payload: event.payload as Prisma.InputJsonValue,
+        },
+      });
+      return record;
     });
-    return toRecord(row);
+  }
+
+  async resolvePending(id: string, status: ResolvedTransactionStatus): Promise<boolean> {
+    const { count } = await this.prisma.transaction.updateMany({
+      where: { id, status: DbTransactionStatus.PENDING },
+      data: { status: STATUS_TO_DB[status] },
+    });
+    return count === 1;
   }
 
   async findById(id: string): Promise<TransactionRecord | null> {

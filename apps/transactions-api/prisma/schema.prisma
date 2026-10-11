@@ -45,3 +45,16 @@ model Transaction {
   @@index([transferTypeId, createdAt(sort: Desc)])
   @@map("transactions")
 }
+
+/// Outbox: eventos gravados na mesma transação da mudança de estado e publicados
+/// no Kafka por um relay. O id é o eventId do envelope.
+model OutboxEvent {
+  id          String    @id @db.Uuid
+  topic       String
+  messageKey  String    @map("message_key")
+  payload     Json
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+
+  @@map("outbox_events")
+}
