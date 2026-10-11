@@ -3,6 +3,23 @@
 Registro das decisões estruturantes do projeto. Cada uma traz o que foi decidido, o que mais
 foi considerado e por quê.
 
+- **Projeto:** [organização](#organização-do-projeto) ·
+  [cache do Turborepo no CI](#cache-do-turborepo-no-ci) ·
+  [versão do TypeScript](#versão-do-typescript) ·
+  [ferramentas de qualidade](#ferramentas-de-qualidade) ·
+  [política de dependências](#política-de-dependências)
+- **Backend:** [contrato e validação](#contrato-compartilhado-e-validação) ·
+  [modelagem de dados](#modelagem-de-dados) · [paginação](#paginação-da-listagem) ·
+  [autenticação](#autenticação)
+- **Mensageria:** [formato dos eventos](#formato-dos-eventos) ·
+  [falha na mensageria](#tratamento-de-falha-na-mensageria) · [cliente Kafka](#cliente-kafka)
+- **Frontend:** [status na interface](#atualização-do-status-na-interface) ·
+  [camada de dados](#camada-de-dados-do-frontend) · [BFF](#backend-for-frontend) ·
+  [validação do formulário](#validação-do-formulário)
+- **Testes e entrega:** [test runner](#test-runner) · [estratégia](#estratégia-de-testes) ·
+  [ponta a ponta](#testes-ponta-a-ponta) · [containers](#containers)
+- **[Volume alto de escritas e leituras concorrentes](#volume-alto-de-escritas-e-leituras-concorrentes)**
+
 ## Organização do projeto
 
 **Decisão:** monorepo com pnpm workspaces e Turborepo como executor de tarefas —
@@ -372,3 +389,75 @@ stateful no banco/Redis; NextAuth (Auth.js); argon2 ou bcrypt; cadastro de usuá
   token, o que cabe em dois route handlers.
 - **Fora do escopo:** cadastro, recuperação de senha e papéis. O usuário de demonstração
   existe para quem clona conseguir entrar sem perguntar nada.
+
+## Volume alto de escritas e leituras concorrentes
+
+> A aplicação pode precisar lidar com um volume alto de escritas e leituras concorrentes.
+> Como você abordaria esse requisito?
+
+**Primeiro, medir.** Antes de mudar a arquitetura, um teste de carga (k6, por exemplo)
+com o perfil real — proporção de criação × listagem × detalhe, quantos usuários com
+transações pendentes fazendo polling — para saber qual recurso satura primeiro: conexões
+do Postgres, CPU da API, lag do consumidor ou I/O do banco. Cada item abaixo resolve um
+gargalo diferente; aplicar todos de saída seria custo sem evidência.
+
+### O que a arquitetura atual já permite
+
+- **API e antifraude são stateless:** escalam horizontalmente atrás de um balanceador, e
+  o JWT valida sem consultar o banco.
+- **Escrita curta:** criar uma transação é um `INSERT` na transação e outro no outbox,
+  numa única transação do banco, sem esperar o Kafka. Com UUIDv7, as inserções vão para o
+  fim do índice em vez de espalhar páginas pela B-tree.
+- **Relay concorrente:** `FOR UPDATE SKIP LOCKED` deixa várias instâncias publicarem o
+  outbox em paralelo, sem bloqueio entre elas e sem evento duplicado.
+- **Atualização de status sem contenção:** cada transação muda de status uma única vez, e o
+  `UPDATE ... WHERE status = 'pending'` resolve corridas sem lock explícito. Entrega
+  repetida vira no-op.
+- **Kafka particionado por transação:** a partição é a unidade de paralelismo. Mais
+  partições e mais instâncias do consumidor (até uma por partição) aumentam a vazão, e a
+  ordem por transação continua garantida pela chave.
+
+### Escritas
+
+1. **Pool de conexões:** com muitas réplicas da API, o limite de conexões do Postgres chega
+   antes da CPU. Um PgBouncer em modo transação na frente do banco, e o pool do Prisma
+   dimensionado por instância.
+2. **Consumo em lote:** trocar o processamento mensagem a mensagem por `eachBatch`,
+   aplicando os status com um único `UPDATE ... FROM (VALUES ...)` por lote. Menos idas ao
+   banco por evento.
+3. **Outbox sem polling:** com volume alto, o polling vira carga constante no banco.
+   Debezium lendo o WAL (CDC) publica o outbox sem consultas, com latência menor.
+4. **Particionamento por tempo:** `transactions` e `outbox_events` particionadas por mês.
+   Os índices de cada partição continuam pequenos, e a retenção vira `DROP PARTITION` em
+   vez de `DELETE`.
+5. **Idempotência na criação:** sob carga, o cliente faz retry por timeout. Um header
+   `Idempotency-Key` com restrição única evita transações duplicadas quando a primeira
+   tentativa na verdade deu certo.
+6. **Proteção da entrada:** rate limiting por usuário na API e limites de lag no
+   consumidor, para a sobrecarga degradar devagar em vez de derrubar tudo.
+
+### Leituras
+
+1. **Paginação por cursor:** `OFFSET` fica mais caro quanto mais fundo a página. Keyset
+   sobre `(created_at, id)` — o índice já existe — tem custo constante. O `COUNT(*)` do
+   total também pesa em tabelas grandes; pode virar contagem aproximada ou ser
+   dispensado (o dashboard mostraria "próxima página" em vez do total).
+2. **Réplicas de leitura:** listagem e detalhe lendo de réplicas, a escrita no primário.
+   A interface já lida com o status chegando de forma assíncrona, então o atraso de
+   replicação (normalmente milissegundos) não muda a experiência.
+3. **Cache de transações resolvidas:** depois de aprovada ou rejeitada, a transação nunca
+   mais muda. O detalhe dela pode ter cache longo (Redis, ou HTTP com `ETag`); só as
+   pendentes precisam de dados frescos.
+4. **Modelo de leitura separado (CQRS):** se o dashboard crescer em filtros e agregações,
+   uma projeção alimentada pelos próprios eventos do Kafka (outra tabela, Elasticsearch ou
+   ClickHouse) tira as consultas analíticas do banco transacional.
+5. **Fim do polling:** com muitos usuários olhando pendentes, o polling multiplica as
+   leituras. A API passaria a emitir o resultado por SSE assim que consumisse
+   `transaction.status.updated`, e o polling ficaria só como fallback.
+
+### Ordem em que eu faria
+
+Pool de conexões e paginação por cursor primeiro: são baratos e atacam os gargalos mais
+prováveis. Depois réplicas de leitura e cache das resolvidas. Consumo em lote,
+particionamento e CDC quando a medição mostrar que a escrita ou o outbox são o limite.
+CQRS só com demanda real de consultas que o modelo transacional não atende.
