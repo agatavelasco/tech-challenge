@@ -7,15 +7,15 @@ import { renderWithProviders } from '@/test/render';
 import { server } from '@/test/server';
 import { CreateTransactionForm } from './create-transaction-form';
 
+// Identificadores são colados, não digitados: é o uso real e mantém o teste rápido.
+async function pasteInto(name: string, text: string) {
+  await userEvent.click(screen.getByRole('textbox', { name }));
+  await userEvent.paste(text);
+}
+
 async function fillValidForm() {
-  await userEvent.type(
-    screen.getByRole('textbox', { name: 'Conta de débito' }),
-    '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-  );
-  await userEvent.type(
-    screen.getByRole('textbox', { name: 'Conta de crédito' }),
-    '9c1b6f3e-2a4d-4e8b-9f7a-1d2c3b4a5e6f',
-  );
+  await pasteInto('Conta de débito', '3fa85f64-5717-4562-b3fc-2c963f66afa6');
+  await pasteInto('Conta de crédito', '9c1b6f3e-2a4d-4e8b-9f7a-1d2c3b4a5e6f');
   await userEvent.selectOptions(
     await screen.findByRole('combobox', { name: 'Tipo de transferência' }),
     await screen.findByRole('option', { name: 'TED' }),
@@ -45,9 +45,8 @@ describe('CreateTransactionForm', () => {
   it('recusa contas iguais', async () => {
     renderWithProviders(<CreateTransactionForm />);
     await fillValidForm();
-    const credit = screen.getByRole('textbox', { name: 'Conta de crédito' });
-    await userEvent.clear(credit);
-    await userEvent.type(credit, '3fa85f64-5717-4562-b3fc-2c963f66afa6');
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Conta de crédito' }));
+    await pasteInto('Conta de crédito', '3fa85f64-5717-4562-b3fc-2c963f66afa6');
     await userEvent.click(screen.getByRole('button', { name: 'Criar transação' }));
 
     expect(

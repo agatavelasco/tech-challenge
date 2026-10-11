@@ -9,5 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.tsx', 'src/**/*.test.ts'],
     setupFiles: ['src/test/setup.ts'],
+    // No CI estes testes dividem a máquina com os de integração (containers).
+    testTimeout: 15_000,
   },
 });
