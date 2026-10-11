@@ -1,7 +1,21 @@
-import { PasswordHasher } from './password-hasher.js';
+import { FAST_SCRYPT_COST } from '../../test/support/fast-scrypt.js';
+import { DEFAULT_SCRYPT_COST, PasswordHasher } from './password-hasher.js';
 
 describe('PasswordHasher', () => {
-  const hasher = new PasswordHasher();
+  const hasher = new PasswordHasher(FAST_SCRYPT_COST);
+
+  it('usa por padrão o custo recomendado pela OWASP e o grava junto do hash', async () => {
+    const stored = await new PasswordHasher().hash('demo12345');
+
+    expect(DEFAULT_SCRYPT_COST).toEqual({ N: 131_072, r: 8, p: 1 });
+    expect(stored.startsWith('scrypt$131072$8$1$')).toBe(true);
+  });
+
+  it('confere hash gerado com outro custo, lendo os parâmetros gravados', async () => {
+    const stored = await hasher.hash('demo12345');
+
+    await expect(new PasswordHasher().verify('demo12345', stored)).resolves.toBe(true);
+  });
 
   it('não guarda a senha e confere a senha certa', async () => {
     const stored = await hasher.hash('demo12345');

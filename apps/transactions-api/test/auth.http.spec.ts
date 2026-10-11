@@ -3,11 +3,13 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import type { App } from 'supertest/types.js';
 import { AuthModule } from '../src/auth/auth.module.js';
+import { SCRYPT_COST } from '../src/auth/password-hasher.js';
 import { UsersRepository } from '../src/auth/users.repository.js';
 import { APP_CONFIG, loadAppConfig } from '../src/config/app-config.js';
 import { ConfigModule } from '../src/config/config.module.js';
 import { TransactionsModule } from '../src/transactions/transactions.module.js';
 import { TransactionsRepository } from '../src/transactions/transactions.repository.js';
+import { FAST_SCRYPT_COST } from './support/fast-scrypt.js';
 import { InMemoryTransactionsRepository } from './support/in-memory-transactions.repository.js';
 import { InMemoryUsersRepository } from './support/in-memory-users.repository.js';
 
@@ -31,6 +33,8 @@ describe('Autenticação na API HTTP', () => {
           DEMO_USER_PASSWORD: credentials.password,
         }),
       )
+      .overrideProvider(SCRYPT_COST)
+      .useValue(FAST_SCRYPT_COST)
       .overrideProvider(UsersRepository)
       .useValue(new InMemoryUsersRepository())
       .overrideProvider(TransactionsRepository)

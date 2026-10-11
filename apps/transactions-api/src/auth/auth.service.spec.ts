@@ -1,5 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { FAST_SCRYPT_COST } from '../../test/support/fast-scrypt.js';
 import { InMemoryUsersRepository } from '../../test/support/in-memory-users.repository.js';
 import { AuthService } from './auth.service.js';
 import { PasswordHasher } from './password-hasher.js';
@@ -9,7 +10,7 @@ describe('AuthService', () => {
     secret: 'segredo-de-teste-com-mais-de-32-caracteres',
     signOptions: { expiresIn: 600 },
   });
-  const hasher = new PasswordHasher();
+  const hasher = new PasswordHasher(FAST_SCRYPT_COST);
   let users: InMemoryUsersRepository;
   let service: AuthService;
 

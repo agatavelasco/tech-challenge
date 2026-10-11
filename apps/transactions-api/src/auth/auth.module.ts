@@ -6,7 +6,7 @@ import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { DemoUserSeeder } from './demo-user.seeder.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
-import { PasswordHasher } from './password-hasher.js';
+import { DEFAULT_SCRYPT_COST, PasswordHasher, SCRYPT_COST } from './password-hasher.js';
 import { PrismaUsersRepository, UsersRepository } from './users.repository.js';
 
 @Module({
@@ -24,6 +24,7 @@ import { PrismaUsersRepository, UsersRepository } from './users.repository.js';
   providers: [
     AuthService,
     PasswordHasher,
+    { provide: SCRYPT_COST, useValue: DEFAULT_SCRYPT_COST },
     DemoUserSeeder,
     { provide: UsersRepository, useClass: PrismaUsersRepository },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
