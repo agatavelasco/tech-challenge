@@ -1,5 +1,5 @@
 import { deadLetterTopic } from '@tech-challenge/contracts';
-import type { KafkaPublisher, OutgoingMessage } from './kafka-publisher.js';
+import type { MessagePublisher, OutgoingMessage } from './kafka-publisher.js';
 
 export interface DeadLetter {
   sourceTopic: string;
@@ -27,7 +27,7 @@ export function toDeadLetterMessage(deadLetter: DeadLetter, failedAt: Date): Out
  * o consumidor a reprocessaria para sempre e travaria a partição.
  */
 export class DeadLetterPublisher {
-  constructor(private readonly publisher: KafkaPublisher) {}
+  constructor(private readonly publisher: MessagePublisher) {}
 
   send(deadLetter: DeadLetter): Promise<void> {
     return this.publisher.publish([toDeadLetterMessage(deadLetter, new Date())]);
