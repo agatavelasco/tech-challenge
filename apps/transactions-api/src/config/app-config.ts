@@ -10,6 +10,11 @@ const appConfigSchema = z.object({
   KAFKA_GROUP_ID_TRANSACTIONS: z.string().min(1).default('transactions-consumer'),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(500),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().positive().max(1000).default(100),
+  // HS256 com segredo curto é quebrável por força bruta: exige ao menos 32 caracteres.
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET precisa de pelo menos 32 caracteres'),
+  JWT_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(3600),
+  DEMO_USER_EMAIL: z.email().optional(),
+  DEMO_USER_PASSWORD: z.string().min(8).optional(),
   ...kafkaConfigSchema.shape,
 });
 export type AppConfig = z.infer<typeof appConfigSchema>;

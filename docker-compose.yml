@@ -96,6 +96,11 @@ services:
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: ${KAFKA_CLIENT_ID:-tech-challenge}
       KAFKA_GROUP_ID_TRANSACTIONS: ${KAFKA_GROUP_ID_TRANSACTIONS:-transactions-consumer}
+      # Padrão só para rodar localmente; em qualquer ambiente real, defina JWT_SECRET.
+      JWT_SECRET: ${JWT_SECRET:-segredo-local-apenas-para-desenvolvimento-troque}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@desafio.local}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo12345}
       WEB_ORIGIN: http://localhost:${WEB_PORT:-3000}
     depends_on:
       migrate:

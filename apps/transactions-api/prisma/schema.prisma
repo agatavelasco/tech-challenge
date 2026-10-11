@@ -58,3 +58,13 @@ model OutboxEvent {
 
   @@map("outbox_events")
 }
+
+model User {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  email        String   @unique
+  /// scrypt com sal aleatório; formato documentado em src/auth/password-hasher.ts.
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@map("users")
+}

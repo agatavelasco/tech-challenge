@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthModule } from './auth/auth.module.js';
 import { ConfigModule } from './config/config.module.js';
 import { HealthController } from './health/health.controller.js';
 import { MessagingModule } from './messaging/messaging.module.js';
@@ -11,6 +12,7 @@ import { TransactionsModule } from './transactions/transactions.module.js';
   imports: [
     ConfigModule,
     PrismaModule,
+    AuthModule,
     MessagingModule,
     TransactionsModule,
     TransactionEventsModule,
