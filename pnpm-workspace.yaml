@@ -1,6 +1,12 @@
 packages:
   - apps/*
   - packages/*
+# Scripts de instalação ficam bloqueados por padrão. Liberados: os do Prisma, que
+# baixam o engine de migrations. Negados: otimizações nativas opcionais do ssh2 e uma
+# checagem de versão do protobufjs, dependências do Testcontainers que funcionam sem eles.
 allowBuilds:
   '@prisma/engines': true
+  cpu-features: false
   prisma: true
+  protobufjs: false
+  ssh2: false
