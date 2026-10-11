@@ -9,6 +9,8 @@ import { KafkaPublisher } from '@tech-challenge/messaging';
 import { APP_CONFIG, type AppConfig } from '../config/app-config.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
+const PURGE_INTERVAL_MS = 60 * 60 * 1000;
+
 interface PendingOutboxEvent {
   id: string;
   topic: string;
@@ -29,6 +31,7 @@ interface PendingOutboxEvent {
 export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(OutboxRelay.name);
   private timer: NodeJS.Timeout | undefined;
+  private purgeTimer: NodeJS.Timeout | undefined;
   private inFlight: Promise<void> | undefined;
 
   constructor(
@@ -41,11 +44,26 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
     this.timer = setInterval(() => {
       this.tick();
     }, this.config.OUTBOX_POLL_INTERVAL_MS);
+    this.purgeTimer = setInterval(() => {
+      this.purgePublished().catch((error: unknown) => {
+        this.logger.warn(`Falha ao limpar o outbox: ${String(error)}`);
+      });
+    }, PURGE_INTERVAL_MS);
   }
 
   async onApplicationShutdown(): Promise<void> {
     clearInterval(this.timer);
+    clearInterval(this.purgeTimer);
     await this.inFlight;
+  }
+
+  /** Remove eventos publicados há mais tempo que a retenção. Devolve quantos removeu. */
+  async purgePublished(now = new Date()): Promise<number> {
+    const cutoff = new Date(now.getTime() - this.config.OUTBOX_RETENTION_HOURS * 3_600_000);
+    const { count } = await this.prisma.outboxEvent.deleteMany({
+      where: { publishedAt: { lt: cutoff } },
+    });
+    return count;
   }
 
   /** Publica um lote. Devolve quantos eventos foram publicados. */

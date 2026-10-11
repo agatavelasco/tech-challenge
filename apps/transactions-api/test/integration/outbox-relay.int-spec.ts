@@ -102,4 +102,31 @@ describe('OutboxRelay (Postgres e Kafka reais)', () => {
     expect(keysFromThisTest).toHaveLength(20);
     expect(new Set(keysFromThisTest).size).toBe(20);
   });
+
+  it('remove só os eventos publicados há mais tempo que a retenção', async () => {
+    const old = await repository.create(input, transactionCreatedMessage);
+    const recent = await repository.create(input, transactionCreatedMessage);
+    const pending = await repository.create(input, transactionCreatedMessage);
+    const now = new Date();
+    await prisma.outboxEvent.updateMany({
+      where: { messageKey: old.id },
+      data: { publishedAt: new Date(now.getTime() - 100 * 3_600_000) },
+    });
+    await prisma.outboxEvent.updateMany({
+      where: { messageKey: recent.id },
+      data: { publishedAt: new Date(now.getTime() - 3_600_000) },
+    });
+    const relay = new OutboxRelay(
+      prisma,
+      publisher,
+      integrationConfig({ OUTBOX_RETENTION_HOURS: '72' }),
+    );
+
+    await expect(relay.purgePublished(now)).resolves.toBe(1);
+
+    const remaining = await prisma.outboxEvent.findMany({ select: { messageKey: true } });
+    expect(remaining.map((event) => event.messageKey).sort()).toEqual(
+      [recent.id, pending.id].sort(),
+    );
+  });
 });
