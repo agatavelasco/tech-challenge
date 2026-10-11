@@ -194,6 +194,70 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
+  apps/anti-fraud:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^12.1.2
+        version: 12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^12.1.2
+        version: 12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/microservices@12.1.2)(@nestjs/platform-express@12.1.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/microservices':
+        specifier: ^12.1.2
+        version: 12.1.2(@grpc/grpc-js@1.14.6)(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2)(kafkajs@2.2.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express':
+        specifier: ^12.1.2
+        version: 12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2)
+      '@tech-challenge/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@tech-challenge/messaging':
+        specifier: workspace:*
+        version: link:../../packages/messaging
+      kafkajs:
+        specifier: ^2.2.4
+        version: 2.2.4
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@nestjs/cli':
+        specifier: ^12.0.8
+        version: 12.0.8(@types/node@22.20.5)(prettier@3.9.10)
+      '@nestjs/schematics':
+        specifier: ^12.0.6
+        version: 12.0.6(chokidar@5.0.0)(prettier@3.9.10)(typescript@6.0.3)
+      '@nestjs/testing':
+        specifier: ^12.1.2
+        version: 12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2)(@nestjs/microservices@12.1.2)(@nestjs/platform-express@12.1.2)
+      '@tech-challenge/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@testcontainers/kafka':
+        specifier: ^12.2.0
+        version: 12.2.0
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
+      '@types/supertest':
+        specifier: ^7.2.1
+        version: 7.2.1
+      supertest:
+        specifier: ^7.3.1
+        version: 7.3.1
+      testcontainers:
+        specifier: ^12.2.0
+        version: 12.2.0
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@22.20.5)(vite@8.3.4(@types/node@22.20.5)(jiti@2.6.1)(yaml@2.9.1))
+
   apps/transactions-api:
     dependencies:
       '@nestjs/common':
