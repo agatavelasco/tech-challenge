@@ -1,5 +1,20 @@
 import { expect, test, type Page } from '@playwright/test';
 
+// Mesmo usuário de demonstração que o docker-compose cria na API.
+const DEMO_USER = {
+  email: process.env.DEMO_USER_EMAIL ?? 'demo@desafio.local',
+  password: process.env.DEMO_USER_PASSWORD ?? 'demo12345',
+};
+
+async function login(page: Page) {
+  await page.goto('/transactions');
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await page.getByRole('textbox', { name: 'E-mail' }).fill(DEMO_USER.email);
+  await page.getByLabel('Senha').fill(DEMO_USER.password);
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/transactions$/);
+}
+
 async function createTransaction(page: Page, { value, type }: { value: string; type: string }) {
   await page.goto('/transactions/new');
   const generateButtons = page.getByRole('button', { name: 'Gerar' });
@@ -14,7 +29,28 @@ async function createTransaction(page: Page, { value, type }: { value: string; t
   return page.getByRole('article');
 }
 
+test('sem sessão, o dashboard leva ao login e volta para a página pedida', async ({ page }) => {
+  await page.goto('/transactions?status=approved');
+  await expect(page).toHaveURL(/\/login\?next=%2Ftransactions%3Fstatus%3Dapproved$/);
+
+  await page.getByRole('textbox', { name: 'E-mail' }).fill(DEMO_USER.email);
+  await page.getByLabel('Senha').fill('senha-errada');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  // O Next também tem um role="alert" (anunciador de rotas): filtra pelo texto.
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'E-mail ou senha inválidos.' }),
+  ).toBeVisible();
+
+  await page.getByLabel('Senha').fill(DEMO_USER.password);
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/transactions\?status=approved$/);
+});
+
 test.describe('Fluxo de transação de ponta a ponta', () => {
+  test.beforeEach(async ({ page }) => {
+    await login(page);
+  });
+
   test('transação até 1000 é aprovada sem recarregar a página', async ({ page }) => {
     const detail = await createTransaction(page, { value: '1000', type: 'Pix' });
 
