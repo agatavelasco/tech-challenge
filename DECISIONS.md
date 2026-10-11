@@ -337,3 +337,38 @@ Kafka, antifraude e consumidor. Rodar contra as imagens de produção também va
 Dockerfiles e o compose que o README manda usar. Ficar por último evita gastar minutos
 subindo containers quando uma verificação barata já falhou. O Playwright foi escolhido pela
 consulta por papel acessível (`getByRole`), a mesma usada nos testes de componente.
+
+## Autenticação
+
+**Decisão:** JWT (HS256) emitido pela API em `POST /auth/login`, exigido por um guard
+global — toda rota nasce protegida e só `/auth/login` e `/health` são `@Public()`. Senhas
+com scrypt do `node:crypto`. No frontend, o token vive num cookie `httpOnly`: o route handler
+de login o grava, o BFF o transforma em `Authorization: Bearer` e o `proxy.ts` do Next manda
+para o login quem chega sem cookie. Um usuário de demonstração é criado na subida a partir
+de `DEMO_USER_EMAIL`/`DEMO_USER_PASSWORD`.
+
+**Alternativas consideradas:** token em `localStorage` enviado pelo navegador; sessão
+stateful no banco/Redis; NextAuth (Auth.js); argon2 ou bcrypt; cadastro de usuários.
+
+**Por quê:**
+
+- **Cookie `httpOnly` em vez de `localStorage`:** o script da página não lê o token, então
+  um XSS não o exfiltra. `SameSite=Lax` cobre CSRF nas mutações, que são todas POST
+  same-origin via BFF.
+- **JWT em vez de sessão no servidor:** a API valida sem consultar banco a cada requisição
+  e continua stateless para escalar horizontalmente. O custo é não revogar um token antes
+  de expirar — mitigado pela validade curta (1h). Com requisito de logout imediato em
+  todos os dispositivos, uma lista de revogação ou sessão no Redis entraria.
+- **Guard global (negar por padrão):** esquecer o decorator numa rota nova a deixa
+  fechada, não aberta. O guard ignora contextos não-HTTP, porque os consumidores Kafka do
+  app híbrido passam pelos mesmos guards e não carregam token.
+- **scrypt do `node:crypto`:** algoritmo recomendado pela OWASP sem dependência nativa (o
+  argon2 exigiria liberar script de instalação e compilar no container). Os parâmetros
+  ficam gravados junto do hash, então o custo pode subir sem invalidar senhas antigas.
+- **Login sem vazamento:** e-mail inexistente e senha errada devolvem a mesma mensagem e
+  pagam o mesmo custo de hash, para não revelar quais e-mails existem. O `next` do login só
+  aceita caminhos internos, evitando redirecionamento aberto.
+- **Sem NextAuth:** a fonte de verdade da identidade é a API; o Next só guarda e repassa o
+  token, o que cabe em dois route handlers.
+- **Fora do escopo:** cadastro, recuperação de senha e papéis. O usuário de demonstração
+  existe para quem clona conseguir entrar sem perguntar nada.
