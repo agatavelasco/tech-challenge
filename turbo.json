@@ -22,6 +22,9 @@
       "dependsOn": ["^build", "generate"],
       "cache": false
     },
+    "test:e2e": {
+      "cache": false
+    },
     "dev": {
       "dependsOn": ["^build", "generate"],
       "cache": false,
