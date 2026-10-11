@@ -1,4 +1,5 @@
 import {
+  type LoginInput,
   transactionPageSchema,
   transactionSchema,
   transferTypeSchema,
@@ -85,4 +86,14 @@ export const apiClient = {
 
   listTransferTypes: (): Promise<TransferType[]> =>
     request('/transfer-types', z.array(transferTypeSchema)),
+
+  // Login e logout são tratados pelo próprio Next, que guarda o token em cookie httpOnly.
+  login: (input: LoginInput): Promise<null> =>
+    request('/auth/login', z.null(), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(input),
+    }),
+
+  logout: (): Promise<null> => request('/auth/logout', z.null(), { method: 'POST' }),
 };

@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server';
+import { SESSION_COOKIE } from '@/lib/session';
 
 /**
  * Backend for frontend: o navegador chama /api/* no próprio Next, que encaminha para
@@ -24,6 +25,8 @@ async function forward(request: NextRequest, { params }: RouteContext<'/api/[...
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }
+  const session = request.cookies.get(SESSION_COOKIE)?.value;
+  if (session) headers.set('authorization', `Bearer ${session}`);
 
   let upstream: Response;
   try {
