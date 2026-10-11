@@ -4,6 +4,9 @@
   "private": true,
   "description": "API de transações: criação, consulta e listagem; publica e consome eventos do antifraude",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",

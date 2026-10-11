@@ -4,6 +4,9 @@
   "private": true,
   "description": "Antifraude: consome transações criadas, aplica a regra e publica o resultado",
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
