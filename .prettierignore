@@ -6,3 +6,4 @@ coverage/
 .turbo/
 playwright-report/
 test-results/
+**/src/generated/

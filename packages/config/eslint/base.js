@@ -27,6 +27,11 @@ export function createBaseConfig({ tsconfigRootDir }) {
         ],
       },
     },
+    {
+      // Matchers assimétricos do Vitest (expect.any, expect.objectContaining) são tipados como any.
+      files: ['**/*.spec.ts', '**/*.spec.tsx'],
+      rules: { '@typescript-eslint/no-unsafe-assignment': 'off' },
+    },
     prettier,
   );
 }
