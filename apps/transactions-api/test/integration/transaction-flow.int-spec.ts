@@ -22,6 +22,7 @@ describe('Fluxo assíncrono da API de transações (Postgres e Kafka reais)', ()
   const kafka = testKafka();
   const antiFraud = new KafkaPublisher(kafka);
   let app: INestApplication<App>;
+  let authorization: string;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
@@ -33,6 +34,12 @@ describe('Fluxo assíncrono da API de transações (Postgres e Kafka reais)', ()
     await app.init();
     await resetDatabase(app.get(PrismaService));
     await startKafkaConsumer(app, app.get(KAFKA), config);
+
+    // O usuário de demonstração é criado na subida (DemoUserSeeder).
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: 'demo@desafio.local', password: 'demo12345' });
+    authorization = `Bearer ${(login.body as { accessToken: string }).accessToken}`;
   });
 
   afterAll(async () => {
@@ -41,17 +48,22 @@ describe('Fluxo assíncrono da API de transações (Postgres e Kafka reais)', ()
   });
 
   const fetchTransaction = async (id: string): Promise<Transaction> => {
-    const response = await request(app.getHttpServer()).get(`/transactions/${id}`);
+    const response = await request(app.getHttpServer())
+      .get(`/transactions/${id}`)
+      .set('authorization', authorization);
     return response.body as Transaction;
   };
 
   it('cria pendente, publica o evento e aplica o resultado do antifraude', async () => {
-    const created = await request(app.getHttpServer()).post('/transactions').send({
-      accountExternalIdDebit: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-      accountExternalIdCredit: '9c1b6f3e-2a4d-4e8b-9f7a-1d2c3b4a5e6f',
-      transferTypeId: 1,
-      value: 1500,
-    });
+    const created = await request(app.getHttpServer())
+      .post('/transactions')
+      .set('authorization', authorization)
+      .send({
+        accountExternalIdDebit: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        accountExternalIdCredit: '9c1b6f3e-2a4d-4e8b-9f7a-1d2c3b4a5e6f',
+        transferTypeId: 1,
+        value: 1500,
+      });
     const transaction = created.body as Transaction;
     expect(transaction.transactionStatus.name).toBe('pending');
 

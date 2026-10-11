@@ -13,6 +13,9 @@ export function integrationConfig(overrides: Record<string, string> = {}): AppCo
     KAFKA_GROUP_ID_TRANSACTIONS: `transactions-${randomUUID()}`,
     KAFKA_TOPIC_PARTITIONS: '1',
     OUTBOX_POLL_INTERVAL_MS: '100',
+    JWT_SECRET: 'segredo-de-teste-de-integracao-com-32-caracteres',
+    DEMO_USER_EMAIL: 'demo@desafio.local',
+    DEMO_USER_PASSWORD: 'demo12345',
     ...overrides,
   });
 }
