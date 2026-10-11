@@ -37,6 +37,12 @@ describe('createTransactionSchema', () => {
     ).toBe(false);
   });
 
+  it('explica em português quando o valor não é um número', () => {
+    const result = createTransactionSchema.safeParse({ ...validInput, value: Number.NaN });
+
+    expect(result.error?.issues[0]?.message).toBe('Informe um valor numérico');
+  });
+
   it('rejeita tipo de transferência não inteiro', () => {
     expect(createTransactionSchema.safeParse({ ...validInput, transferTypeId: 1.5 }).success).toBe(
       false,

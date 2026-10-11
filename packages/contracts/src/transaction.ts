@@ -15,7 +15,7 @@ function hasAtMostTwoDecimals(value: number): boolean {
 }
 
 export const transactionValueSchema = z
-  .number()
+  .number({ error: 'Informe um valor numérico' })
   .positive('O valor deve ser maior que zero')
   .max(999_999_999_999.99, 'Valor acima do máximo suportado')
   .refine(hasAtMostTwoDecimals, 'O valor deve ter no máximo duas casas decimais');
@@ -24,7 +24,10 @@ export const createTransactionSchema = z
   .object({
     accountExternalIdDebit: z.guid('Conta de débito inválida'),
     accountExternalIdCredit: z.guid('Conta de crédito inválida'),
-    transferTypeId: z.number().int().positive('Tipo de transferência inválido'),
+    transferTypeId: z
+      .number({ error: 'Selecione o tipo de transferência' })
+      .int()
+      .positive('Selecione o tipo de transferência'),
     value: transactionValueSchema,
   })
   .refine((input) => input.accountExternalIdDebit !== input.accountExternalIdCredit, {
