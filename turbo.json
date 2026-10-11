@@ -18,6 +18,10 @@
     "test": {
       "dependsOn": ["^build", "generate"]
     },
+    "test:integration": {
+      "dependsOn": ["^build", "generate"],
+      "cache": false
+    },
     "dev": {
       "dependsOn": ["^build", "generate"],
       "cache": false,

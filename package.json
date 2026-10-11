@@ -12,9 +12,10 @@
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "quality": "pnpm format:check && turbo run lint typecheck test build",
+    "quality": "pnpm format:check && turbo run lint typecheck test test:integration build",
     "prepare": "husky"
   },
   "devDependencies": {
