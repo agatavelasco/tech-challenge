@@ -1,4 +1,4 @@
-import type { Kafka, Producer } from 'kafkajs';
+import { type Kafka, Partitioners, type Producer } from 'kafkajs';
 
 export interface OutgoingMessage {
   topic: string;
@@ -25,7 +25,12 @@ export class KafkaPublisher implements MessagePublisher {
   private connection: Promise<void> | undefined;
 
   constructor(kafka: Kafka) {
-    this.producer = kafka.producer({ idempotent: true, maxInFlightRequests: 1 });
+    this.producer = kafka.producer({
+      idempotent: true,
+      maxInFlightRequests: 1,
+      // Particionador padrão do Kafka (murmur2 sobre a chave), compatível com outros clientes.
+      createPartitioner: Partitioners.DefaultPartitioner,
+    });
   }
 
   async disconnect(): Promise<void> {
