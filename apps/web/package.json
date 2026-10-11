@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "next build && cp -R .next/static .next/standalone/apps/web/.next/static",
-    "dev": "next dev --port ${WEB_PORT:-3000}",
+    "dev": "next dev --port \"$(node scripts/port.mjs)\"",
     "start": "node .next/standalone/apps/web/server.js",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
