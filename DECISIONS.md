@@ -296,3 +296,44 @@ scripts de instalação.
 **Por quê:** ataques de cadeia de suprimentos costumam ser publicados e removidos em
 poucas horas — a janela que a política cobre. Scripts de instalação são o principal vetor
 desses ataques; cada liberação é explícita e justificada no `pnpm-workspace.yaml`.
+
+## Containers
+
+**Decisão:** um Dockerfile multi-stage por app, com `turbo prune --docker` para recortar o
+monorepo e `pnpm deploy --prod` (Nest) ou a saída `standalone` (Next) na imagem final, que
+roda como usuário não-root. Migrations rodam num serviço `migrate` de execução única,
+antes da API subir. Healthchecks em `/health` (a da API consulta o banco) encadeiam a ordem
+de subida.
+
+**Alternativas consideradas:** imagem única com o monorepo inteiro; rodar
+`prisma migrate deploy` no start da API; `container_name` fixo como no compose original.
+
+**Por quê:**
+
+- **`turbo prune`:** a camada de dependências depende só do lockfile recortado, então
+  muda pouco e fica em cache.
+- **Imagem final enxuta:** leva só o necessário para rodar (~290–390 MB contra 1,6 GB do
+  estágio de build) e não carrega o CLI do Prisma nem ferramentas de desenvolvimento.
+- **Migration separada:** com várias réplicas da API, migrar no start faria cada uma
+  disputar a mesma migration. O serviço `migrate` roda uma vez e a API só sobe quando ele
+  termina com sucesso.
+- **Sem `container_name` fixo:** nome fixo impede duas cópias da stack ao mesmo tempo. Sem
+  ele, o e2e sobe um projeto isolado (`tech-challenge-e2e`, portas próprias) enquanto o
+  ambiente de desenvolvimento continua no ar.
+- **Portas configuráveis:** todas as portas do host vêm do ambiente, com os padrões do
+  enunciado.
+
+## Testes ponta a ponta
+
+**Decisão:** Playwright contra a stack completa em containers, criada num projeto compose
+isolado e destruída ao final (inclusive em falha). Roda como última etapa do
+`pnpm quality`, depois que lint, tipos, testes e build passaram.
+
+**Alternativas consideradas:** e2e contra os apps em `pnpm dev`; Cypress; não ter e2e.
+
+**Por quê:** é o único teste que prova o requisito central de ponta a ponta: a transação
+nasce pendente e muda de status na tela, sem recarregar, depois de passar por API, outbox,
+Kafka, antifraude e consumidor. Rodar contra as imagens de produção também valida os
+Dockerfiles e o compose que o README manda usar. Ficar por último evita gastar minutos
+subindo containers quando uma verificação barata já falhou. O Playwright foi escolhido pela
+consulta por papel acessível (`getByRole`), a mesma usada nos testes de componente.
