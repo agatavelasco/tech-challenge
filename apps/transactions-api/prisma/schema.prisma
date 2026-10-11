@@ -1,0 +1,47 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TransactionStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("transaction_status")
+}
+
+/// Dado de referência: as linhas são criadas pela própria migration.
+model TransferType {
+  id           Int           @id
+  name         String        @unique
+  transactions Transaction[]
+
+  @@map("transfer_types")
+}
+
+model Transaction {
+  /// UUIDv7: exposto como transactionExternalId; ordenado no tempo, mantém o índice compacto.
+  id                      String            @id @default(uuid(7)) @db.Uuid
+  accountExternalIdDebit  String            @map("account_external_id_debit") @db.Uuid
+  accountExternalIdCredit String            @map("account_external_id_credit") @db.Uuid
+  transferTypeId          Int               @map("transfer_type_id")
+  transferType            TransferType      @relation(fields: [transferTypeId], references: [id])
+  value                   Decimal           @db.Decimal(14, 2)
+  status                  TransactionStatus @default(PENDING)
+  createdAt               DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([createdAt(sort: Desc), id(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([transferTypeId, createdAt(sort: Desc)])
+  @@map("transactions")
+}
