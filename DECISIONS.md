@@ -128,3 +128,97 @@ frontend.
 **Por quê:** o NestJS 12 já gera projetos ESM com Vitest, e o Jest com ESM ainda depende de
 flags experimentais. Um único runner significa uma configuração e uma API de testes para
 todo o monorepo.
+
+## Formato dos eventos
+
+**Decisão:** envelope comum `{ eventId, type, version, occurredAt, payload }`, em JSON,
+validado com zod no consumidor. A chave da mensagem no Kafka é o `transactionExternalId`.
+Payloads mínimos: `transaction.created` leva `{ transactionExternalId, value }` e
+`transaction.status.updated` leva `{ transactionExternalId, status }`, com `status` restrito
+a `approved` ou `rejected`.
+
+**Alternativas consideradas:** payload "cru" sem envelope; evento com a transação completa
+(event-carried state transfer); Avro ou Protobuf com schema registry.
+
+**Por quê:**
+
+- **`eventId`** identifica cada evento para deduplicação e rastreio.
+- **`version`** permite evoluir o payload sem quebrar quem consome a versão anterior.
+- **`occurredAt`** separa o momento do fato do momento da entrega.
+- **Chave = transação:** todos os eventos de uma transação caem na mesma partição, então
+  chegam em ordem.
+- **Payload mínimo:** o antifraude só precisa do valor. Enviar a transação inteira
+  acoplaria o consumidor ao modelo da API sem necessidade.
+- **JSON + zod em vez de Avro/Protobuf:** com produtores e consumidores em TypeScript no
+  mesmo repositório, o pacote `contracts` dá a mesma garantia em compilação. Com
+  serviços em outras linguagens ou times independentes, um schema registry com regras de
+  compatibilidade passaria a valer o custo.
+
+## Tratamento de falha na mensageria
+
+**Decisão:** outbox transacional na publicação, consumidores idempotentes, nova tentativa
+para falha transitória e dead letter para mensagem inválida.
+
+- **Publicação (outbox):** a transação e o evento são gravados na mesma transação do banco.
+  Um relay trava lotes pendentes com `FOR UPDATE SKIP LOCKED`, publica no Kafka com
+  producer idempotente e `acks = -1` e só então marca como publicados. Com o Kafka fora, a
+  API continua aceitando transações; os eventos saem quando o broker volta.
+- **Consumo:** falha transitória (ex.: banco fora) sobe como erro, o offset não é
+  confirmado e o Kafka entrega de novo. Mensagem que não passa na validação vai para
+  `<tópico>.dlq` com o motivo e o conteúdo original, e o consumo segue.
+- **Idempotência:** a entrega é pelo menos uma vez. A API só muda status
+  `WHERE status = 'pending'`, então resultado repetido ou atrasado não sobrescreve o já
+  gravado; o antifraude é determinístico, então reavaliar dá o mesmo resultado.
+- **Subida resiliente:** os serviços sobem o HTTP primeiro e esperam o Kafka com backoff
+  exponencial, em vez de cair.
+
+**Alternativas consideradas:** publicar direto após o commit; publicar dentro da transação
+do banco; reconciliação periódica das transações pendentes; Debezium (CDC) lendo o outbox;
+tópicos de retry com atraso.
+
+**Por quê:** publicar depois do commit perde o evento se o processo cair entre o commit e o
+envio, e a transação fica pendente para sempre. Publicar antes do commit pode anunciar uma
+transação que depois sofre rollback. O outbox elimina as duas janelas com o próprio banco.
+A reconciliação de pendentes funcionaria para este fluxo, mas depende de o estado permitir
+reconstruir o evento, o que não vale para eventos futuros. O Debezium seria o passo
+seguinte para volume alto (sem polling), mas exige Kafka Connect só para isso. Tópicos de
+retry com atraso fazem sentido quando a falha transitória é frequente; aqui, reprocessar na
+própria partição mantém a ordem por transação, que é mais importante.
+
+**Custo assumido:** o relay mantém uma transação do banco aberta durante o envio ao Kafka
+(lotes pequenos e timeout limitam o impacto) e adiciona até um intervalo de polling
+(500 ms) de latência.
+
+## Cliente Kafka
+
+**Decisão:** transporte Kafka do `@nestjs/microservices` para consumir e `kafkajs` para
+publicar, encapsulado no pacote `messaging`.
+
+**Alternativas consideradas:** `@confluentinc/kafka-javascript` (cliente oficial da
+Confluent, baseado em librdkafka).
+
+**Por quê:** o transporte do Nest dá ciclo de vida, deserialização e roteamento por tópico
+prontos, e é o que o time NestJS espera encontrar. O risco é o `kafkajs` estar sem releases
+desde 2023. O cliente da Confluent é mantido e oferece uma API compatível com a do kafkajs,
+então a troca fica concentrada no pacote `messaging` e na configuração do transporte; é a
+primeira mudança que eu faria antes de ir para produção.
+
+## Estratégia de testes
+
+**Decisão:** três camadas, todas no `pnpm quality` e no CI.
+
+| Camada     | Ferramenta                      | O que cobre                                                                                      |
+| ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Unidade    | Vitest + repositório em memória | regras: limite de 1000, idempotência, validação dos contratos, dead letter                       |
+| HTTP       | Vitest + supertest              | contrato da API: status, formato e erros por campo                                               |
+| Integração | Vitest + Testcontainers         | Postgres e Kafka reais: migrations, atomicidade do outbox, concorrência do relay, fluxo completo |
+
+**Alternativas consideradas:** só testes unitários com mocks; banco e broker em memória;
+integração contra o docker-compose de desenvolvimento.
+
+**Por quê:** as garantias mais importantes deste sistema — atomicidade, `SKIP LOCKED`,
+`CHECK` do banco, entrega no Kafka — só existem na infraestrutura real; um mock as faria
+passar por definição. Os testes de unidade continuam rápidos e cobrem as regras de negócio
+sem depender de container. O Testcontainers cria e destrói o ambiente a cada execução,
+então o resultado não depende do estado de um compose local, e o CI roda exatamente o mesmo
+teste. As imagens são as mesmas do `docker-compose.yml`.
