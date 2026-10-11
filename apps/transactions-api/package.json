@@ -1,0 +1,41 @@
+{
+  "name": "@tech-challenge/transactions-api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "API de transações: criação, consulta e listagem; publica e consome eventos do antifraude",
+  "type": "module",
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.1.2",
+    "@nestjs/core": "^12.1.2",
+    "@nestjs/platform-express": "^12.1.2",
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "@tech-challenge/contracts": "workspace:*",
+    "pg": "^8.23.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^12.0.8",
+    "@nestjs/schematics": "^12.0.6",
+    "@nestjs/testing": "^12.1.2",
+    "@tech-challenge/config": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/supertest": "^7.2.1",
+    "prisma": "7.10.0",
+    "supertest": "^7.3.1",
+    "vitest": "^4.1.11"
+  }
+}
