@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import type { CreateTransactionInput, TransferType } from '@tech-challenge/contracts';
 import type {
+  CreateTransactionInput,
+  ResolvedTransactionStatus,
+  TransferType,
+} from '@tech-challenge/contracts';
+import type {
+  OutboxMessage,
   PageRequest,
   TransactionFilters,
   TransactionRecord,
@@ -15,9 +20,13 @@ export const TRANSFER_TYPES: TransferType[] = [
 /** Implementação em memória da porta de persistência, para testar regras sem banco. */
 export class InMemoryTransactionsRepository extends TransactionsRepository {
   readonly records: TransactionRecord[] = [];
+  readonly outbox: OutboxMessage[] = [];
   private clock = Date.parse('2026-10-11T12:00:00.000Z');
 
-  create(input: CreateTransactionInput): Promise<TransactionRecord> {
+  create(
+    input: CreateTransactionInput,
+    eventFor: (record: TransactionRecord) => OutboxMessage,
+  ): Promise<TransactionRecord> {
     const transferType = TRANSFER_TYPES.find((type) => type.id === input.transferTypeId);
     if (!transferType) throw new Error(`Tipo ${input.transferTypeId} não existe`);
 
@@ -31,7 +40,15 @@ export class InMemoryTransactionsRepository extends TransactionsRepository {
       createdAt: new Date((this.clock += 1000)),
     };
     this.records.push(record);
+    this.outbox.push(eventFor(record));
     return Promise.resolve(record);
+  }
+
+  resolvePending(id: string, status: ResolvedTransactionStatus): Promise<boolean> {
+    const record = this.records.find((candidate) => candidate.id === id);
+    if (record?.status !== 'pending') return Promise.resolve(false);
+    record.status = status;
+    return Promise.resolve(true);
   }
 
   findById(id: string): Promise<TransactionRecord | null> {

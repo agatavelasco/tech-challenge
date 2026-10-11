@@ -32,11 +32,56 @@ describe('TransactionsService', () => {
       });
     });
 
+    it('grava o evento de criação no outbox, com a transação como chave', async () => {
+      const transaction = await service.create(input);
+
+      expect(repository.outbox).toEqual([
+        {
+          eventId: expect.any(String),
+          topic: 'transaction.created',
+          key: transaction.transactionExternalId,
+          payload: expect.objectContaining({
+            type: 'transaction.created',
+            version: 1,
+            payload: { transactionExternalId: transaction.transactionExternalId, value: 120 },
+          }),
+        },
+      ]);
+    });
+
     it('recusa tipo de transferência inexistente sem gravar nada', async () => {
       await expect(service.create({ ...input, transferTypeId: 99 })).rejects.toBeInstanceOf(
         BadRequestException,
       );
       expect(repository.records).toHaveLength(0);
+      expect(repository.outbox).toHaveLength(0);
+    });
+  });
+
+  describe('applyAntiFraudResult', () => {
+    it('resolve a transação pendente com o resultado do antifraude', async () => {
+      const created = await service.create(input);
+
+      await service.applyAntiFraudResult(created.transactionExternalId, 'rejected');
+
+      const transaction = await service.findByExternalId(created.transactionExternalId);
+      expect(transaction.transactionStatus.name).toBe('rejected');
+    });
+
+    it('ignora resultado repetido ou atrasado sem sobrescrever o status já resolvido', async () => {
+      const created = await service.create(input);
+      await service.applyAntiFraudResult(created.transactionExternalId, 'approved');
+
+      await service.applyAntiFraudResult(created.transactionExternalId, 'rejected');
+
+      const transaction = await service.findByExternalId(created.transactionExternalId);
+      expect(transaction.transactionStatus.name).toBe('approved');
+    });
+
+    it('não falha para transação desconhecida', async () => {
+      await expect(
+        service.applyAntiFraudResult('0b7e7c1a-4f3d-4c2b-8a1e-5d6f7a8b9c0d', 'approved'),
+      ).resolves.toBeUndefined();
     });
   });
 
