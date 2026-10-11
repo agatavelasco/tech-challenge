@@ -11,5 +11,6 @@ import { TransferTypesController } from './transfer-types.controller.js';
     TransactionsService,
     { provide: TransactionsRepository, useClass: PrismaTransactionsRepository },
   ],
+  exports: [TransactionsService],
 })
 export class TransactionsModule {}
