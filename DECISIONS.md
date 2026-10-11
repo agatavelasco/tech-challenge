@@ -222,3 +222,77 @@ passar por definição. Os testes de unidade continuam rápidos e cobrem as regr
 sem depender de container. O Testcontainers cria e destrói o ambiente a cada execução,
 então o resultado não depende do estado de um compose local, e o CI roda exatamente o mesmo
 teste. As imagens são as mesmas do `docker-compose.yml`.
+
+## Atualização do status na interface
+
+**Decisão:** polling com TanStack Query a cada 3 segundos, **apenas enquanto houver
+transação pendente na tela** (na listagem, na página visível; no detalhe, a própria
+transação). Quando nada está pendente, o polling para. Uma região `aria-live` anuncia as
+atualizações para leitores de tela.
+
+**Alternativas consideradas:** Server-Sent Events; WebSocket; polling contínuo; botão
+"atualizar" manual.
+
+**Por quê:** o antifraude responde em segundos e a transação só muda de estado uma vez
+(pendente → aprovada/rejeitada). Polling condicionado resolve com zero infraestrutura nova:
+nenhuma conexão persistente, nada a escalar no servidor, funciona atrás de qualquer proxy e
+herda cache, deduplicação e reconexão do React Query. O custo é latência de até 3s e
+requisições enquanto há pendentes — aceitável para o volume de uma tela de backoffice. Com
+muitas transações pendentes simultâneas ou exigência de tempo real, SSE passaria a valer:
+a API emitiria o evento ao consumir `transaction.status.updated`, e o polling viraria
+fallback. WebSocket seria excessivo para comunicação em um só sentido.
+
+## Camada de dados do frontend
+
+**Decisão:** TanStack Query para todo estado vindo do servidor; filtros e página na URL;
+nenhum store global.
+
+**Alternativas consideradas:** Context API guardando as transações; `useEffect` + `useState`
+por tela; Redux.
+
+**Por quê:** guardar dados do servidor num Context obriga a reimplementar cache,
+invalidação, loading e erro em cada tela — e não dá polling nem nova tentativa. O React
+Query resolve isso por chave de consulta, e invalidar `['transactions']` após criar
+atualiza listagem e detalhe. Filtros na URL tornam a busca compartilhável, preservada pelo
+botão voltar e testável sem estado escondido; URL editada à mão com valor inválido vira
+"sem filtro" em vez de quebrar a tela.
+
+## Backend for frontend
+
+**Decisão:** o navegador chama apenas `/api/*` no próprio Next; um route handler encaminha
+para a API de transações, cujo endereço (`TRANSACTIONS_API_URL`) existe só no servidor.
+
+**Alternativas consideradas:** navegador chamando a API direto, com CORS e
+`NEXT_PUBLIC_API_URL`; `rewrites` do Next.
+
+**Por quê:** a autenticação guarda o token em cookie `httpOnly`, que o JavaScript do
+navegador não lê — alguém no servidor precisa transformá-lo em `Authorization`, e o route
+handler é esse ponto. De quebra: a API não precisa ser exposta publicamente, não há CORS, e
+falha de rede vira um 502 com mensagem legível. `rewrites` encaminharia, mas sem lugar para
+essa lógica.
+
+## Validação do formulário
+
+**Decisão:** react-hook-form com `zodResolver(createTransactionSchema)` — o mesmo schema da
+API. Erros por campo devolvidos pela API (ex.: tipo inexistente) são aplicados ao campo
+correspondente.
+
+**Alternativas consideradas:** validação manual por campo; yup com schema próprio do
+frontend.
+
+**Por quê:** uma regra, um lugar: "valor positivo com até duas casas" e "contas distintas"
+valem igual no formulário e na API. O que só o servidor sabe validar volta no mesmo formato
+(`errors.campo`), então a interface trata os dois casos do mesmo jeito.
+
+## Política de dependências
+
+**Decisão:** manter a idade mínima de release do pnpm ativa; quando uma versão é recente
+demais, fixar a anterior (ex.: `react-hook-form ~7.89`) em vez de abrir exceção. Scripts de
+instalação bloqueados por padrão e liberados um a um (`allowBuilds`).
+
+**Alternativas consideradas:** aceitar a exceção sugerida pelo pnpm; liberar todos os
+scripts de instalação.
+
+**Por quê:** ataques de cadeia de suprimentos costumam ser publicados e removidos em
+poucas horas — a janela que a política cobre. Scripts de instalação são o principal vetor
+desses ataques; cada liberação é explícita e justificada no `pnpm-workspace.yaml`.
