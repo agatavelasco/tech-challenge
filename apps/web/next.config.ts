@@ -7,6 +7,7 @@ if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  partialPrefetching: true,
   reactCompiler: true,
   // Imagem de produção enxuta: só o necessário para rodar o servidor (ver Dockerfile).
   output: 'standalone',
