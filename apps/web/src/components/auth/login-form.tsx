@@ -51,7 +51,6 @@ export function LoginForm() {
         <h1 id="login-title" className="text-2xl font-semibold tracking-tight">
           Entrar
         </h1>
-        <p className="text-sm text-slate-500">Acesse o painel de transações.</p>
       </div>
 
       {errors.root?.message && (

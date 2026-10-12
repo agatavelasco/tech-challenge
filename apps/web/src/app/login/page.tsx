@@ -4,9 +4,9 @@ import { Suspense } from 'react';
 import { LoginForm } from '@/components/auth/login-form';
 
 const FLOW = [
-  { icon: ArrowLeftRight, title: 'Transação criada', text: 'Registrada na hora, como pendente.' },
-  { icon: ShieldCheck, title: 'Análise antifraude', text: 'Avaliada de forma assíncrona.' },
-  { icon: BadgeCheck, title: 'Status atualizado', text: 'O resultado aparece sozinho na tela.' },
+  { icon: ArrowLeftRight, title: 'Transação criada' },
+  { icon: ShieldCheck, title: 'Análise antifraude' },
+  { icon: BadgeCheck, title: 'Status atualizado' },
 ];
 
 export default function LoginPage() {
@@ -29,18 +29,15 @@ export default function LoginPage() {
             Transações validadas em tempo real, do registro à decisão.
           </p>
           <ol className="flex flex-col">
-            {FLOW.map(({ icon: Icon, title, text }, index) => (
-              <li key={title} className="relative flex gap-4 pb-7 last:pb-0">
+            {FLOW.map(({ icon: Icon, title }, index) => (
+              <li key={title} className="relative flex gap-4 pb-6 last:pb-0">
                 {index < FLOW.length - 1 && (
                   <span aria-hidden className="absolute top-10 bottom-0 left-5 w-px bg-white/25" />
                 )}
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/25 ring-inset">
                   <Icon aria-hidden className="size-5" />
                 </span>
-                <span className="flex flex-col pt-0.5">
-                  <span className="font-semibold">{title}</span>
-                  <span className="text-sm text-white/75">{text}</span>
-                </span>
+                <span className="self-center font-semibold">{title}</span>
               </li>
             ))}
           </ol>
