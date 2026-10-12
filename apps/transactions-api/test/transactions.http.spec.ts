@@ -79,10 +79,17 @@ describe('API HTTP de transações', () => {
     expect(response.body).toMatchObject({ meta: { page: 1, pageSize: 5, total: 1 } });
   });
 
-  it('GET /transactions responde 400 para filtro inválido', async () => {
-    const response = await http().get('/transactions?status=cancelled');
+  it('GET /transactions responde 400 em português para filtro inválido', async () => {
+    const status = await http().get('/transactions?status=cancelled');
+    const pageSize = await http().get('/transactions?pageSize=500');
 
-    expect(response.status).toBe(400);
+    expect(status.status).toBe(400);
+    expect(status.body).toMatchObject({
+      errors: { status: ['Status inválido: use pending, approved ou rejected'] },
+    });
+    expect(pageSize.body).toMatchObject({
+      errors: { pageSize: ['O tamanho da página deve ser no máximo 100'] },
+    });
   });
 
   it('GET /transfer-types lista os tipos', async () => {

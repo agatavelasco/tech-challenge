@@ -41,4 +41,20 @@ describe('listTransactionsQuerySchema', () => {
 
     expect(result.success).toBe(true);
   });
+
+  it.each([
+    [{ pageSize: '500' }, 'O tamanho da página deve ser no máximo 100'],
+    [{ page: '0' }, 'A página deve ser 1 ou maior'],
+    [{ page: 'abc' }, 'A página deve ser um número'],
+    [{ status: 'cancelled' }, 'Status inválido: use pending, approved ou rejected'],
+    [{ transferTypeId: '-1' }, 'Tipo de transferência inválido'],
+    [
+      { createdFrom: 'ontem' },
+      'Data inicial inválida: use o formato ISO 8601 (ex.: 2026-10-01T00:00:00Z)',
+    ],
+  ])('explica em português o erro de %o', (query, message) => {
+    const result = listTransactionsQuerySchema.safeParse(query);
+
+    expect(result.error?.issues[0]?.message).toBe(message);
+  });
 });

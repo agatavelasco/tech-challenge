@@ -10,12 +10,33 @@ export const MAX_PAGE_SIZE = 100;
  */
 export const listTransactionsQuerySchema = z
   .object({
-    page: z.coerce.number().int().min(1).default(1),
-    pageSize: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
-    status: transactionStatusSchema.optional(),
-    transferTypeId: z.coerce.number().int().positive().optional(),
-    createdFrom: z.iso.datetime().optional(),
-    createdTo: z.iso.datetime().optional(),
+    page: z.coerce
+      .number({ error: 'A página deve ser um número' })
+      .int('A página deve ser um número inteiro')
+      .min(1, 'A página deve ser 1 ou maior')
+      .default(1),
+    pageSize: z.coerce
+      .number({ error: 'O tamanho da página deve ser um número' })
+      .int('O tamanho da página deve ser um número inteiro')
+      .min(1, 'O tamanho da página deve ser 1 ou maior')
+      .max(MAX_PAGE_SIZE, `O tamanho da página deve ser no máximo ${String(MAX_PAGE_SIZE)}`)
+      .default(DEFAULT_PAGE_SIZE),
+    status: z
+      .enum(transactionStatusSchema.options, {
+        error: 'Status inválido: use pending, approved ou rejected',
+      })
+      .optional(),
+    transferTypeId: z.coerce
+      .number({ error: 'O tipo de transferência deve ser um número' })
+      .int('Tipo de transferência inválido')
+      .positive('Tipo de transferência inválido')
+      .optional(),
+    createdFrom: z.iso
+      .datetime('Data inicial inválida: use o formato ISO 8601 (ex.: 2026-10-01T00:00:00Z)')
+      .optional(),
+    createdTo: z.iso
+      .datetime('Data final inválida: use o formato ISO 8601 (ex.: 2026-10-31T23:59:59Z)')
+      .optional(),
   })
   .refine(
     (query) =>
