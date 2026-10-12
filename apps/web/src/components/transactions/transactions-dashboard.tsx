@@ -61,7 +61,7 @@ export function TransactionsDashboard() {
               <Button
                 variant="secondary"
                 onClick={() => {
-                  navigate({ page: 1 });
+                  navigate({ page: 1, pageSize: filters.pageSize });
                 }}
               >
                 Limpar filtros
@@ -91,6 +91,10 @@ export function TransactionsDashboard() {
             {...transactions.data.meta}
             onPageChange={(page) => {
               navigate({ ...filters, page });
+            }}
+            // Outro tamanho muda o que cabe em cada página: volta para a primeira.
+            onPageSizeChange={(pageSize) => {
+              navigate({ ...filters, page: 1, pageSize });
             }}
           />
         </>

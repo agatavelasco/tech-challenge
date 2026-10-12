@@ -97,7 +97,7 @@ export function TransactionFiltersBar({ filters, onChange }: FiltersBarProps) {
         <Button
           variant="ghost"
           onClick={() => {
-            onChange({ page: 1 });
+            onChange({ page: 1, pageSize: filters.pageSize });
           }}
         >
           Limpar filtros

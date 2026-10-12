@@ -6,9 +6,19 @@ import {
 } from '@tech-challenge/contracts';
 import { z } from 'zod';
 
+/** Tamanhos de página oferecidos na listagem; o primeiro é o padrão. */
+export const PAGE_SIZE_OPTIONS = [DEFAULT_PAGE_SIZE, 20, 30] as const;
+export type PageSizeOption = (typeof PAGE_SIZE_OPTIONS)[number];
+
+export function isPageSizeOption(value: number): value is PageSizeOption {
+  return (PAGE_SIZE_OPTIONS as readonly number[]).includes(value);
+}
+
 /** Filtros como aparecem na URL: compartilháveis e preservados pelo botão voltar. */
 export interface TransactionFilters {
   page: number;
+  /** Ausente = padrão (10). */
+  pageSize?: PageSizeOption | undefined;
   status?: TransactionStatus | undefined;
   transferTypeId?: number | undefined;
   /** Datas no formato do <input type="date">: AAAA-MM-DD. */
@@ -21,6 +31,13 @@ const dateOnly = z.iso.date();
 // URL editada à mão não pode quebrar a tela: valor inválido vira "sem filtro".
 const filtersFromUrlSchema = z.object({
   page: z.coerce.number().int().min(1).catch(1),
+  // Só os tamanhos oferecidos na tela; qualquer outro volta ao padrão.
+  pageSize: z.coerce
+    .number()
+    .refine(isPageSizeOption)
+    .transform((value) => (value === DEFAULT_PAGE_SIZE ? undefined : value))
+    .optional()
+    .catch(undefined),
   status: transactionStatusSchema.optional().catch(undefined),
   transferTypeId: z.coerce.number().int().positive().optional().catch(undefined),
   from: dateOnly.optional().catch(undefined),
@@ -34,6 +51,9 @@ export function parseFilters(searchParams: URLSearchParams): TransactionFilters 
 export function filtersToSearchParams(filters: TransactionFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.page > 1) params.set('page', String(filters.page));
+  if (filters.pageSize && filters.pageSize !== DEFAULT_PAGE_SIZE) {
+    params.set('pageSize', String(filters.pageSize));
+  }
   if (filters.status) params.set('status', filters.status);
   if (filters.transferTypeId !== undefined)
     params.set('transferTypeId', String(filters.transferTypeId));
@@ -50,7 +70,7 @@ export function hasActiveFilters(filters: TransactionFilters): boolean {
 export function filtersToQuery(filters: TransactionFilters): Partial<ListTransactionsQuery> {
   return {
     page: filters.page,
-    pageSize: DEFAULT_PAGE_SIZE,
+    pageSize: filters.pageSize ?? DEFAULT_PAGE_SIZE,
     status: filters.status,
     transferTypeId: filters.transferTypeId,
     createdFrom: filters.from && new Date(`${filters.from}T00:00:00`).toISOString(),
