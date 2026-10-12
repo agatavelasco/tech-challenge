@@ -259,6 +259,14 @@ muitas transações pendentes simultâneas ou exigência de tempo real, SSE pass
 a API emitiria o evento ao consumir `transaction.status.updated`, e o polling viraria
 fallback. WebSocket seria excessivo para comunicação em um só sentido.
 
+**Quando algo cai:** se uma transação continua pendente por mais de 15 segundos (o normal
+são poucos segundos), a tela avisa que o serviço de análise pode estar indisponível ou
+voltando ao ar, que a transação está registrada e que não é preciso criá-la de novo — para
+o usuário não duplicar a operação por impaciência. Se a própria API não responde (rede ou
+5xx), a tela troca o erro genérico por "serviço temporariamente indisponível" e tenta
+reconectar sozinha a cada 5 segundos, sem exigir clique nem recarregar a página. Erros 4xx
+não são retentados, porque não se resolvem com o tempo.
+
 ## Camada de dados do frontend
 
 **Decisão:** TanStack Query para todo estado vindo do servidor; filtros e página na URL;
