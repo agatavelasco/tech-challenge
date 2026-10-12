@@ -3,10 +3,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginInput } from '@tech-challenge/contracts';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { CircleAlert, LoaderCircle, LockKeyhole, LogIn, Mail } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { ApiError, apiClient } from '@/lib/api-client';
 import { Button } from '../ui/button';
-import { Field, inputClassName } from '../ui/field';
+import { Field, InputIcon, inputClassName } from '../ui/field';
 
 /** Só caminhos internos: `next=https://site-malicioso` não pode virar redirecionamento. */
 function safeNextPath(next: string | null): string {
@@ -44,43 +45,65 @@ export function LoginForm() {
       noValidate
       aria-labelledby="login-title"
       onSubmit={(event) => void onSubmit(event)}
-      className="flex flex-col gap-5 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+      className="flex flex-col gap-5"
     >
-      <h1 id="login-title" className="text-xl font-semibold">
-        Entrar
-      </h1>
+      <div className="flex flex-col gap-1">
+        <h1 id="login-title" className="text-2xl font-semibold tracking-tight">
+          Entrar
+        </h1>
+        <p className="text-sm text-slate-500">Acesse o painel de transações.</p>
+      </div>
 
       {errors.root?.message && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+        <p
+          role="alert"
+          className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
+          <CircleAlert aria-hidden className="size-4 shrink-0" />
           {errors.root.message}
         </p>
       )}
 
       <Field id="email" label="E-mail" error={errors.email?.message}>
-        <input
-          id="email"
-          type="email"
-          autoComplete="username"
-          className={inputClassName}
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? 'email-error' : undefined}
-          {...register('email')}
-        />
+        <span className="relative">
+          <InputIcon>
+            <Mail />
+          </InputIcon>
+          <input
+            id="email"
+            type="email"
+            autoComplete="username"
+            className={`${inputClassName} h-11 pl-9`}
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+            {...register('email')}
+          />
+        </span>
       </Field>
 
       <Field id="password" label="Senha" error={errors.password?.message}>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          className={inputClassName}
-          aria-invalid={Boolean(errors.password)}
-          aria-describedby={errors.password ? 'password-error' : undefined}
-          {...register('password')}
-        />
+        <span className="relative">
+          <InputIcon>
+            <LockKeyhole />
+          </InputIcon>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            className={`${inputClassName} h-11 pl-9`}
+            aria-invalid={Boolean(errors.password)}
+            aria-describedby={errors.password ? 'password-error' : undefined}
+            {...register('password')}
+          />
+        </span>
       </Field>
 
-      <Button type="submit" disabled={isSubmitting}>
+      <Button type="submit" size="lg" className="mt-1 w-full" disabled={isSubmitting}>
+        {isSubmitting ? (
+          <LoaderCircle aria-hidden className="motion-safe:animate-spin" />
+        ) : (
+          <LogIn aria-hidden />
+        )}
         {isSubmitting ? 'Entrando…' : 'Entrar'}
       </Button>
     </form>

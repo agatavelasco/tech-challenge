@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
   isPageSizeOption,
@@ -46,17 +47,20 @@ export function Pagination({
   return (
     <nav
       aria-label="Paginação"
-      className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row"
+      className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/50 px-5 py-3 sm:flex-row"
     >
-      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
         <p>
-          Mostrando <strong>{firstItem}</strong>–<strong>{lastItem}</strong> de{' '}
-          <strong>{total}</strong>
+          Mostrando{' '}
+          <strong className="font-semibold text-slate-900 tabular-nums">
+            {firstItem}–{lastItem}
+          </strong>{' '}
+          de <strong className="font-semibold text-slate-900 tabular-nums">{total}</strong>
         </p>
         <label className="flex items-center gap-2">
           Itens por página
           <select
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm"
+            className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 shadow-xs focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none"
             value={pageSize}
             onChange={(event) => {
               const next = Number(event.target.value);
@@ -82,6 +86,7 @@ export function Pagination({
                 onPageChange(page - 1);
               }}
             >
+              <ChevronLeft aria-hidden />
               Anterior
             </Button>
           </li>
@@ -97,7 +102,7 @@ export function Pagination({
                   size="sm"
                   aria-current={candidate === page ? 'page' : undefined}
                   aria-label={`Página ${String(candidate)}`}
-                  className={cn('min-w-8')}
+                  className={cn('min-w-8 tabular-nums', candidate !== page && 'text-slate-600')}
                   onClick={() => {
                     onPageChange(candidate);
                   }}
@@ -117,6 +122,7 @@ export function Pagination({
               }}
             >
               Próxima
+              <ChevronRight aria-hidden />
             </Button>
           </li>
         </ul>
