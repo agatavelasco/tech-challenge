@@ -180,6 +180,58 @@ describe('TransactionsDashboard', () => {
     expect(navigation.replace).toHaveBeenLastCalledWith('/transactions?page=2', { scroll: false });
   });
 
+  it('troca a quantidade de itens por página e volta para a primeira página', async () => {
+    const requestedPageSizes: (string | null)[] = [];
+    server.use(
+      http.get('*/api/transactions', ({ request }) => {
+        requestedPageSizes.push(new URL(request.url).searchParams.get('pageSize'));
+        return HttpResponse.json(buildPage([buildTransaction()], { total: 25, totalPages: 3 }));
+      }),
+    );
+    navigation.setUrl('/transactions?page=2&status=approved');
+
+    renderWithProviders(<TransactionsDashboard />);
+
+    const pageSize = await screen.findByRole('combobox', { name: 'Itens por página' });
+    expect(
+      within(pageSize)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['10', '20', '30']);
+    expect(requestedPageSizes[0]).toBe('10');
+
+    await userEvent.selectOptions(pageSize, '20');
+
+    expect(navigation.replace).toHaveBeenLastCalledWith(
+      '/transactions?pageSize=20&status=approved',
+      { scroll: false },
+    );
+  });
+
+  it('consulta a API com o tamanho de página da URL', async () => {
+    const requestedPageSizes: (string | null)[] = [];
+    server.use(
+      http.get('*/api/transactions', ({ request }) => {
+        requestedPageSizes.push(new URL(request.url).searchParams.get('pageSize'));
+        return HttpResponse.json(
+          buildPage([buildTransaction()], { pageSize: 30, total: 25, totalPages: 1 }),
+        );
+      }),
+    );
+    navigation.setUrl('/transactions?pageSize=30');
+
+    renderWithProviders(<TransactionsDashboard />);
+
+    // Uma página só, mas o seletor continua lá para voltar a 10 ou 20.
+    const pagination = await screen.findByRole('navigation', { name: 'Paginação' });
+    expect(requestedPageSizes[0]).toBe('30');
+    expect(pagination).toHaveTextContent('Mostrando 1–25 de 25');
+    expect(within(pagination).getByRole('combobox', { name: 'Itens por página' })).toHaveValue(
+      '30',
+    );
+    expect(within(pagination).queryByRole('button', { name: 'Próxima' })).not.toBeInTheDocument();
+  });
+
   it('atualiza sozinho o status enquanto há transação pendente', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     let status: 'pending' | 'approved' = 'pending';

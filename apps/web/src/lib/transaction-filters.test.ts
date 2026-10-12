@@ -11,7 +11,7 @@ describe('filtros da URL', () => {
 
   it('ida e volta entre URL e filtros preserva os valores', () => {
     const params = new URLSearchParams(
-      'page=2&status=pending&transferTypeId=1&from=2026-10-01&to=2026-10-11',
+      'page=2&pageSize=20&status=pending&transferTypeId=1&from=2026-10-01&to=2026-10-11',
     );
 
     expect(filtersToSearchParams(parseFilters(params)).toString()).toBe(params.toString());
@@ -23,5 +23,15 @@ describe('filtros da URL', () => {
     expect(new Date(query.createdFrom ?? '').getHours()).toBe(0);
     expect(new Date(query.createdTo ?? '').getHours()).toBe(23);
     expect(new Date(query.createdTo ?? '').getMinutes()).toBe(59);
+  });
+
+  it('aceita só os tamanhos de página oferecidos na tela', () => {
+    expect(parseFilters(new URLSearchParams('pageSize=30')).pageSize).toBe(30);
+    expect(parseFilters(new URLSearchParams('pageSize=50')).pageSize).toBeUndefined();
+    expect(filtersToQuery(parseFilters(new URLSearchParams('pageSize=50'))).pageSize).toBe(10);
+  });
+
+  it('o tamanho padrão não aparece na URL', () => {
+    expect(filtersToSearchParams({ page: 1, pageSize: 10 }).toString()).toBe('');
   });
 });
