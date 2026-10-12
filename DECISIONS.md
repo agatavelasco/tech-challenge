@@ -309,6 +309,13 @@ frontend.
 valem igual no formulário e na API. O que só o servidor sabe validar volta no mesmo formato
 (`errors.campo`), então a interface trata os dois casos do mesmo jeito.
 
+**Campo de valor com máscara de moeda:** a pessoa digita só números, preenchidos a partir
+dos centavos (`150075` → R$ 1.500,75), no padrão dos apps de banco. Um campo numérico do
+navegador aceita "1.000" e "1,000" com significados diferentes conforme o idioma; com a
+máscara, não há ambiguidade entre ponto e vírgula. A máscara vive só na interface: o
+formulário guarda e envia `number`, e a validação continua sendo a do schema. Sem
+biblioteca: a formatação usa o `Intl.NumberFormat` do próprio navegador.
+
 ## Política de dependências
 
 **Decisão:** manter a idade mínima de release do pnpm ativa; quando uma versão é recente
