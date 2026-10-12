@@ -8,7 +8,10 @@ import {
   parseFilters,
   type TransactionFilters,
 } from '@/lib/transaction-filters';
+import { isAnalysisDelayed, isServiceUnavailable } from '@/lib/service-status';
 import { useTransactions } from '@/lib/transaction-queries';
+import { useNow } from '@/lib/use-now';
+import { DelayedAnalysisNotice, ServiceUnavailableState } from '../service-notices';
 import { EmptyState, ErrorState, LoadingState } from '../states';
 import { Button, buttonVariants } from '../ui/button';
 import { Pagination } from './pagination';
@@ -21,6 +24,9 @@ export function TransactionsDashboard() {
   const searchParams = useSearchParams();
   const filters = parseFilters(new URLSearchParams(searchParams.toString()));
   const transactions = useTransactions(filters);
+  const now = useNow(1_000);
+  const hasDelayedAnalysis =
+    transactions.data?.data.some((transaction) => isAnalysisDelayed(transaction, now)) ?? false;
 
   const navigate = (next: TransactionFilters) => {
     const query = filtersToSearchParams(next).toString();
@@ -38,10 +44,14 @@ export function TransactionsDashboard() {
       {transactions.isPending ? (
         <LoadingState label="Carregando transações" />
       ) : transactions.isError ? (
-        <ErrorState
-          message={transactions.error.message}
-          onRetry={() => void transactions.refetch()}
-        />
+        isServiceUnavailable(transactions.error) ? (
+          <ServiceUnavailableState onRetry={() => void transactions.refetch()} />
+        ) : (
+          <ErrorState
+            message={transactions.error.message}
+            onRetry={() => void transactions.refetch()}
+          />
+        )
       ) : transactions.data.data.length === 0 ? (
         hasActiveFilters(filters) ? (
           <EmptyState
@@ -71,6 +81,11 @@ export function TransactionsDashboard() {
         )
       ) : (
         <>
+          {hasDelayedAnalysis && (
+            <div className="border-b border-slate-200 p-4">
+              <DelayedAnalysisNotice plural />
+            </div>
+          )}
           <TransactionsTable transactions={transactions.data.data} />
           <Pagination
             {...transactions.data.meta}

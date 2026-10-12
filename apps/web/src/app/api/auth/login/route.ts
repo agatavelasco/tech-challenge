@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
     });
   } catch {
     return Response.json(
-      { statusCode: 502, message: 'A API de transações está indisponível no momento.' },
+      {
+        statusCode: 502,
+        message:
+          'O serviço de transações está temporariamente indisponível. Tente novamente em instantes.',
+      },
       { status: 502 },
     );
   }

@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ApiError } from '@/lib/api-client';
 import { formatCurrency, formatDateTime } from '@/lib/format';
+import { isAnalysisDelayed, isServiceUnavailable } from '@/lib/service-status';
 import { useTransaction } from '@/lib/transaction-queries';
+import { useNow } from '@/lib/use-now';
+import { DelayedAnalysisNotice, ServiceUnavailableState } from '../service-notices';
 import { EmptyState, ErrorState, LoadingState } from '../states';
 import { buttonVariants } from '../ui/button';
 import { StatusBadge } from './status-badge';
@@ -12,6 +15,7 @@ import { StatusBadge } from './status-badge';
 export function TransactionDetail() {
   const { id } = useParams<{ id: string }>();
   const transaction = useTransaction(id);
+  const now = useNow(1_000);
 
   if (transaction.isPending) return <LoadingState label="Carregando transação" />;
 
@@ -29,6 +33,9 @@ export function TransactionDetail() {
         />
       );
     }
+    if (isServiceUnavailable(transaction.error)) {
+      return <ServiceUnavailableState onRetry={() => void transaction.refetch()} />;
+    }
     return (
       <ErrorState message={transaction.error.message} onRetry={() => void transaction.refetch()} />
     );
@@ -44,11 +51,17 @@ export function TransactionDetail() {
         <StatusBadge status={data.transactionStatus.name} />
       </header>
 
-      <p aria-live="polite" className="mb-6 text-sm text-slate-600">
-        {isPending
-          ? 'Aguardando a análise antifraude. Esta página atualiza sozinha.'
-          : 'Análise antifraude concluída.'}
-      </p>
+      {isAnalysisDelayed(data, now) ? (
+        <div className="mb-6">
+          <DelayedAnalysisNotice />
+        </div>
+      ) : (
+        <p aria-live="polite" className="mb-6 text-sm text-slate-600">
+          {isPending
+            ? 'Aguardando a análise antifraude. Esta página atualiza sozinha.'
+            : 'Análise antifraude concluída.'}
+        </p>
+      )}
 
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>
