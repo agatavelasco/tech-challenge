@@ -476,3 +476,24 @@ Pool de conexões e paginação por cursor primeiro: são baratos e atacam os ga
 prováveis. Depois réplicas de leitura e cache das resolvidas. Consumo em lote,
 particionamento e CDC quando a medição mostrar que a escrita ou o outbox são o limite.
 CQRS só com demanda real de consultas que o modelo transacional não atende.
+
+## Identidade visual
+
+**Decisão:** magenta BIUD (`#D81656`, a cor do logo) como cor de marca e de ação — botões
+principais, foco, links e cabeçalho —, nunca como cor de status. Status com paleta própria e
+sempre acompanhados de ícone e texto: âmbar (pendente), verde (aprovada), vermelho
+(rejeitada). Tipografia Figtree servida pelo próprio app (`next/font`), números tabulares em
+valores e datas, ícones da Lucide. A passagem de pendente para concluída é uma transição:
+a linha do tempo do detalhe preenche o trecho final na cor do resultado, e o badge anima
+apenas quando o status muda diante de quem está olhando. Tudo respeita
+`prefers-reduced-motion`.
+
+**Alternativas consideradas:** biblioteca de componentes pronta (shadcn/ui, MUI); status
+nas cores da marca; ilustrações em vez de ícones.
+
+**Por quê:** a mudança é só visual — textos, papéis acessíveis e comportamento seguem
+iguais, e a suíte de testes passou sem nenhuma alteração. Trocar de biblioteca de
+componentes mudaria a estrutura do frontend sem ganho para o requisito. O vermelho de
+"rejeitada" é próximo do magenta da marca; manter a marca fora dos status e diferenciar por
+ícone evita que um botão pareça um erro (ou o contrário) e não depende só de cor, o que
+também atende quem tem deficiência na percepção de cores.
