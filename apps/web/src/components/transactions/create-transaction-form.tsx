@@ -18,7 +18,9 @@ import { ApiError } from '@/lib/api-client';
 import { formatCurrencyInput, parseCurrencyInput } from '@/lib/currency-mask';
 import { useCreateTransaction, useTransferTypes } from '@/lib/transaction-queries';
 import { Button } from '../ui/button';
-import { Field, InputIcon, inputClassName } from '../ui/field';
+import { Field, inputClassName } from '../ui/field';
+import { Select } from '../ui/select';
+import { TransferTypeIcon } from './transfer-type-icon';
 
 const FIELDS = [
   'accountExternalIdDebit',
@@ -73,21 +75,16 @@ export function CreateTransactionForm() {
       onSubmit={(event) => void onSubmit(event)}
       className="flex flex-col gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs motion-safe:animate-fade-up sm:p-8"
     >
-      <header className="flex items-start gap-4">
+      <header className="flex items-center gap-4">
         <span
           aria-hidden
           className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 ring-inset"
         >
           <ReceiptText className="size-5" />
         </span>
-        <div>
-          <h1 id="create-transaction-title" className="text-xl font-semibold tracking-tight">
-            Nova transação
-          </h1>
-          <p className="text-sm text-slate-500">
-            Ela é registrada como pendente e analisada pelo antifraude em seguida.
-          </p>
-        </div>
+        <h1 id="create-transaction-title" className="text-xl font-semibold tracking-tight">
+          Nova transação
+        </h1>
       </header>
 
       {errors.root?.message && (
@@ -143,29 +140,34 @@ export function CreateTransactionForm() {
         label="Tipo de transferência"
         error={errors.transferTypeId?.message}
       >
-        <span className="relative">
-          <InputIcon>
-            <Shapes />
-          </InputIcon>
-          <select
-            id="transferTypeId"
-            className={`${inputClassName} pl-9`}
-            defaultValue=""
-            disabled={!transferTypes.data}
-            aria-invalid={Boolean(errors.transferTypeId)}
-            aria-describedby={describedBy('transferTypeId', Boolean(errors.transferTypeId))}
-            {...register('transferTypeId', { valueAsNumber: true })}
-          >
-            <option value="" disabled>
-              {transferTypes.isError ? 'Não foi possível carregar os tipos' : 'Selecione'}
-            </option>
-            {transferTypes.data?.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-        </span>
+        <Controller
+          name="transferTypeId"
+          control={control}
+          render={({ field }) => (
+            <Select
+              id="transferTypeId"
+              ref={field.ref}
+              // Antes da escolha o valor é undefined em runtime, apesar do tipo number.
+              value={Number.isFinite(field.value) ? String(field.value) : ''}
+              onChange={(value) => {
+                field.onChange(Number(value));
+              }}
+              onBlur={field.onBlur}
+              icon={<Shapes />}
+              placeholder={
+                transferTypes.isError ? 'Não foi possível carregar os tipos' : 'Selecione'
+              }
+              disabled={!transferTypes.data}
+              invalid={Boolean(errors.transferTypeId)}
+              aria-describedby={describedBy('transferTypeId', Boolean(errors.transferTypeId))}
+              options={(transferTypes.data ?? []).map((type) => ({
+                value: String(type.id),
+                label: type.name,
+                icon: <TransferTypeIcon name={type.name} />,
+              }))}
+            />
+          )}
+        />
       </Field>
 
       <Field
@@ -207,13 +209,15 @@ export function CreateTransactionForm() {
       <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
         <Button
           variant="ghost"
+          size="lg"
+          className="sm:min-w-44"
           onClick={() => {
             router.push('/transactions');
           }}
         >
           Cancelar
         </Button>
-        <Button type="submit" size="lg" disabled={isSubmitting}>
+        <Button type="submit" size="lg" className="sm:min-w-44" disabled={isSubmitting}>
           {isSubmitting ? (
             <LoaderCircle aria-hidden className="motion-safe:animate-spin" />
           ) : (

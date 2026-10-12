@@ -20,7 +20,9 @@ async function createTransaction(page: Page, { value, type }: { value: string; t
   const generateButtons = page.getByRole('button', { name: 'Gerar' });
   await generateButtons.nth(0).click();
   await generateButtons.nth(1).click();
-  await page.getByRole('combobox', { name: 'Tipo de transferência' }).selectOption({ label: type });
+  // Dropdown do projeto: abre o campo e escolhe a opção na lista.
+  await page.getByRole('combobox', { name: 'Tipo de transferência' }).click();
+  await page.getByRole('listbox').getByRole('option', { name: type }).click();
   // Máscara de moeda: só dígitos, a partir dos centavos ("100000" → R$ 1.000,00).
   await page.getByRole('textbox', { name: 'Valor' }).fill(value);
   await page.getByRole('button', { name: 'Criar transação' }).click();

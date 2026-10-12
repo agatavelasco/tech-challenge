@@ -6,6 +6,7 @@ import {
   type PageSizeOption,
 } from '@/lib/transaction-filters';
 import { Button } from '../ui/button';
+import { Select } from '../ui/select';
 
 interface PaginationProps {
   page: number;
@@ -47,7 +48,7 @@ export function Pagination({
   return (
     <nav
       aria-label="Paginação"
-      className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/50 px-5 py-3 sm:flex-row"
+      className="flex flex-col items-center justify-between gap-3 rounded-b-2xl border-t border-slate-200 bg-slate-50/50 px-5 py-3 sm:flex-row"
     >
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
         <p>
@@ -57,23 +58,23 @@ export function Pagination({
           </strong>{' '}
           de <strong className="font-semibold text-slate-900 tabular-nums">{total}</strong>
         </p>
-        <label className="flex items-center gap-2">
-          Itens por página
-          <select
-            className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 shadow-xs focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 focus:outline-none"
-            value={pageSize}
-            onChange={(event) => {
-              const next = Number(event.target.value);
+        <div className="flex items-center gap-2">
+          <label htmlFor="page-size">Itens por página</label>
+          <Select
+            id="page-size"
+            size="sm"
+            className="w-20"
+            value={String(pageSize)}
+            onChange={(value) => {
+              const next = Number(value);
               if (isPageSizeOption(next)) onPageSizeChange(next);
             }}
-          >
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={PAGE_SIZE_OPTIONS.map((option) => ({
+              value: String(option),
+              label: String(option),
+            }))}
+          />
+        </div>
       </div>
       {totalPages > 1 && (
         <ul className="flex items-center gap-1">
