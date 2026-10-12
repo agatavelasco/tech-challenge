@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
+import { RECONNECT_INTERVAL_MS } from '@/lib/service-status';
 import { PENDING_REFETCH_INTERVAL_MS } from '@/lib/transaction-queries';
 import { buildPage, buildTransaction } from '@/test/fixtures';
 import { navigation } from '@/test/navigation';
@@ -38,13 +39,13 @@ describe('TransactionsDashboard', () => {
     );
   });
 
-  it('mostra o erro e permite tentar de novo', async () => {
+  it('mostra erro que não se resolve sozinho com opção de tentar de novo', async () => {
     let attempts = 0;
     server.use(
       http.get('*/api/transactions', () => {
         attempts++;
         return attempts === 1
-          ? HttpResponse.json({ statusCode: 502, message: 'API fora do ar' }, { status: 502 })
+          ? HttpResponse.json({ statusCode: 403, message: 'Acesso negado' }, { status: 403 })
           : HttpResponse.json(buildPage([buildTransaction()]));
       }),
     );
@@ -52,9 +53,78 @@ describe('TransactionsDashboard', () => {
     renderWithProviders(<TransactionsDashboard />);
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('API fora do ar');
+    expect(alert).toHaveTextContent('Acesso negado');
     await userEvent.click(within(alert).getByRole('button', { name: 'Tentar novamente' }));
     expect(await screen.findByRole('table', { name: 'Transações' })).toBeInTheDocument();
+  });
+
+  it('com a API fora, avisa que o serviço vai voltar e reconecta sozinho', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let apiIsUp = false;
+    server.use(
+      http.get('*/api/transactions', () =>
+        apiIsUp
+          ? HttpResponse.json(buildPage([buildTransaction()]))
+          : HttpResponse.json({ statusCode: 502, message: 'indisponível' }, { status: 502 }),
+      ),
+    );
+
+    try {
+      renderWithProviders(<TransactionsDashboard />);
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'O serviço está temporariamente indisponível',
+      );
+
+      apiIsUp = true;
+      await vi.advanceTimersByTimeAsync(RECONNECT_INTERVAL_MS);
+
+      // Sem clique: a tela volta sozinha quando o serviço responde.
+      expect(await screen.findByRole('table', { name: 'Transações' })).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('avisa quando a análise de alguma transação na tela está demorando', async () => {
+    server.use(
+      http.get('*/api/transactions', () =>
+        HttpResponse.json(
+          buildPage([
+            buildTransaction({
+              transactionStatus: { name: 'pending' },
+              createdAt: new Date(Date.now() - 60_000).toISOString(),
+            }),
+          ]),
+        ),
+      ),
+    );
+
+    renderWithProviders(<TransactionsDashboard />);
+
+    expect(
+      await screen.findByText('A análise antifraude está demorando mais que o normal.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/As transações estão registradas/)).toBeInTheDocument();
+  });
+
+  it('não mostra o aviso de demora para pendente recém-criada', async () => {
+    server.use(
+      http.get('*/api/transactions', () =>
+        HttpResponse.json(
+          buildPage([
+            buildTransaction({
+              transactionStatus: { name: 'pending' },
+              createdAt: new Date().toISOString(),
+            }),
+          ]),
+        ),
+      ),
+    );
+
+    renderWithProviders(<TransactionsDashboard />);
+
+    await screen.findByRole('table', { name: 'Transações' });
+    expect(screen.queryByText(/demorando mais que o normal/)).not.toBeInTheDocument();
   });
 
   it('aplica os filtros na URL e na consulta à API', async () => {

@@ -17,7 +17,11 @@ describe('TransactionDetail', () => {
     server.use(
       http.get(`*/api/transactions/${id}`, () =>
         HttpResponse.json(
-          buildTransaction({ value: 999.9, transactionStatus: { name: 'pending' } }),
+          buildTransaction({
+            value: 999.9,
+            transactionStatus: { name: 'pending' },
+            createdAt: new Date().toISOString(),
+          }),
         ),
       ),
     );
@@ -28,6 +32,29 @@ describe('TransactionDetail', () => {
     expect(await screen.findByText('R$ 999,90')).toBeInTheDocument();
     expect(screen.getByText('Pendente')).toBeInTheDocument();
     expect(screen.getByText(/Esta página atualiza sozinha/)).toBeInTheDocument();
+    expect(screen.queryByText(/demorando mais que o normal/)).not.toBeInTheDocument();
+  });
+
+  it('avisa de forma amigável quando a análise demora, sem pedir nova transação', async () => {
+    server.use(
+      http.get(`*/api/transactions/${id}`, () =>
+        HttpResponse.json(
+          buildTransaction({
+            transactionStatus: { name: 'pending' },
+            createdAt: new Date(Date.now() - 60_000).toISOString(),
+          }),
+        ),
+      ),
+    );
+
+    renderWithProviders(<TransactionDetail />);
+
+    expect(
+      await screen.findByText('A análise antifraude está demorando mais que o normal.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Sua transação está registrada/)).toHaveTextContent(
+      'não é preciso criá-la de novo',
+    );
   });
 
   it('mostra "não encontrada" para transação inexistente', async () => {
@@ -49,14 +76,15 @@ describe('TransactionDetail', () => {
     );
   });
 
-  it('mostra o erro de rede com opção de tentar de novo', async () => {
+  it('com o servidor fora, avisa que o serviço vai voltar e oferece tentar agora', async () => {
     server.use(http.get(`*/api/transactions/${id}`, () => HttpResponse.error()));
 
     renderWithProviders(<TransactionDetail />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Não foi possível conectar ao servidor',
+      'O serviço está temporariamente indisponível',
     );
-    expect(screen.getByRole('button', { name: 'Tentar novamente' })).toBeInTheDocument();
+    expect(screen.getByText('Tentando reconectar…')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Tentar agora' })).toBeInTheDocument();
   });
 });
