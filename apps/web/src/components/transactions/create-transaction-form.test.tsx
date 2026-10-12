@@ -20,7 +20,8 @@ async function fillValidForm() {
     await screen.findByRole('combobox', { name: 'Tipo de transferência' }),
     await screen.findByRole('option', { name: 'TED' }),
   );
-  await userEvent.type(screen.getByRole('spinbutton', { name: 'Valor (R$)' }), '250.50');
+  // Máscara de moeda: só dígitos, preenchidos a partir dos centavos.
+  await userEvent.type(screen.getByRole('textbox', { name: 'Valor' }), '25050');
 }
 
 describe('CreateTransactionForm', () => {
@@ -103,6 +104,20 @@ describe('CreateTransactionForm', () => {
     expect(await screen.findByText('Tipo de transferência inexistente')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Dados inválidos');
     expect(navigation.push).not.toHaveBeenCalled();
+  });
+
+  it('formata o valor em reais enquanto a pessoa digita', async () => {
+    renderWithProviders(<CreateTransactionForm />);
+    const value = screen.getByRole<HTMLInputElement>('textbox', { name: 'Valor' });
+
+    await userEvent.type(value, '1');
+    expect(value.value).toBe('R$\u00a00,01');
+    await userEvent.type(value, '50075');
+    expect(value.value).toBe('R$\u00a01.500,75');
+    await userEvent.type(value, 'abc');
+    expect(value.value).toBe('R$\u00a01.500,75');
+    await userEvent.clear(value);
+    expect(value.value).toBe('');
   });
 
   it('gera um identificador de conta válido', async () => {

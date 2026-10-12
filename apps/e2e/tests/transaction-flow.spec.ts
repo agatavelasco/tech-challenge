@@ -21,7 +21,8 @@ async function createTransaction(page: Page, { value, type }: { value: string; t
   await generateButtons.nth(0).click();
   await generateButtons.nth(1).click();
   await page.getByRole('combobox', { name: 'Tipo de transferência' }).selectOption({ label: type });
-  await page.getByRole('spinbutton', { name: 'Valor (R$)' }).fill(value);
+  // Máscara de moeda: só dígitos, a partir dos centavos ("100000" → R$ 1.000,00).
+  await page.getByRole('textbox', { name: 'Valor' }).fill(value);
   await page.getByRole('button', { name: 'Criar transação' }).click();
   await expect(page).toHaveURL(/\/transactions\/[0-9a-f-]{36}$/);
   // O Next mantém a página anterior oculta no DOM (para o voltar ser instantâneo):
@@ -52,7 +53,7 @@ test.describe('Fluxo de transação de ponta a ponta', () => {
   });
 
   test('transação até 1000 é aprovada sem recarregar a página', async ({ page }) => {
-    const detail = await createTransaction(page, { value: '1000', type: 'Pix' });
+    const detail = await createTransaction(page, { value: '100000', type: 'Pix' });
 
     await expect(detail.getByText('R$ 1.000,00')).toBeVisible();
     // O antifraude responde de forma assíncrona; o detalhe atualiza sozinho.
@@ -63,7 +64,7 @@ test.describe('Fluxo de transação de ponta a ponta', () => {
   test('transação acima de 1000 é rejeitada e aparece no filtro de rejeitadas', async ({
     page,
   }) => {
-    const detail = await createTransaction(page, { value: '1000.01', type: 'TED' });
+    const detail = await createTransaction(page, { value: '100001', type: 'TED' });
     await expect(detail.getByText('Rejeitada')).toBeVisible();
 
     await page.goto('/transactions?status=rejected');
