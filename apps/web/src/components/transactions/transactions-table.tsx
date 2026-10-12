@@ -1,6 +1,9 @@
+'use client';
+
 import type { Transaction } from '@tech-challenge/contracts';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { formatCurrency } from '@/lib/format';
 import { StatusBadge } from './status-badge';
@@ -17,8 +20,10 @@ const ROW_ACCENT = {
 };
 
 export function TransactionsTable({ transactions }: { transactions: Transaction[] }) {
+  const router = useRouter();
+
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto last:rounded-b-2xl">
       <table className="w-full text-left text-sm">
         <caption className="sr-only">Transações</caption>
         <thead className="border-b border-slate-200 bg-slate-50/70 text-xs font-medium text-slate-500">
@@ -44,7 +49,13 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
           {transactions.map((transaction) => (
             <tr
               key={transaction.transactionExternalId}
-              className="group transition-colors hover:bg-brand-50/40"
+              className="group cursor-pointer transition-colors hover:bg-brand-50/40"
+              // A linha inteira abre o detalhe. O link do identificador continua sendo o
+              // caminho por teclado e leitor de tela (e permite abrir em nova aba).
+              onClick={(event) => {
+                if ((event.target as HTMLElement).closest('a')) return;
+                router.push(`/transactions/${transaction.transactionExternalId}`);
+              }}
             >
               {/* A faixa fica na primeira célula: pseudo-elemento na <tr> viraria uma coluna. */}
               <td

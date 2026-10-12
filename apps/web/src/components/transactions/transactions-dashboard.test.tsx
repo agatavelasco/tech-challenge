@@ -6,6 +6,7 @@ import { PENDING_REFETCH_INTERVAL_MS } from '@/lib/transaction-queries';
 import { buildPage, buildTransaction } from '@/test/fixtures';
 import { navigation } from '@/test/navigation';
 import { renderWithProviders } from '@/test/render';
+import { chooseOption } from '@/test/select';
 import { server } from '@/test/server';
 import { TransactionsDashboard } from './transactions-dashboard';
 
@@ -144,7 +145,7 @@ describe('TransactionsDashboard', () => {
     expect(requestedUrls[0]?.searchParams.get('transferTypeId')).toBe('2');
     expect(requestedUrls[0]?.searchParams.get('page')).toBe('3');
 
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Status' }), 'rejected');
+    await chooseOption('Status', 'Rejeitada');
 
     // Trocar filtro volta para a primeira página.
     expect(navigation.replace).toHaveBeenLastCalledWith(
@@ -192,15 +193,15 @@ describe('TransactionsDashboard', () => {
 
     renderWithProviders(<TransactionsDashboard />);
 
-    const pageSize = await screen.findByRole('combobox', { name: 'Itens por página' });
+    await userEvent.click(await screen.findByRole('combobox', { name: 'Itens por página' }));
     expect(
-      within(pageSize)
+      within(screen.getByRole('listbox'))
         .getAllByRole('option')
         .map((option) => option.textContent),
     ).toEqual(['10', '20', '30']);
     expect(requestedPageSizes[0]).toBe('10');
 
-    await userEvent.selectOptions(pageSize, '20');
+    await userEvent.click(within(screen.getByRole('listbox')).getByRole('option', { name: '20' }));
 
     expect(navigation.replace).toHaveBeenLastCalledWith(
       '/transactions?pageSize=20&status=approved',
@@ -226,10 +227,33 @@ describe('TransactionsDashboard', () => {
     const pagination = await screen.findByRole('navigation', { name: 'Paginação' });
     expect(requestedPageSizes[0]).toBe('30');
     expect(pagination).toHaveTextContent('Mostrando 1–25 de 25');
-    expect(within(pagination).getByRole('combobox', { name: 'Itens por página' })).toHaveValue(
-      '30',
-    );
+    expect(
+      within(pagination).getByRole('combobox', { name: 'Itens por página' }),
+    ).toHaveTextContent('30');
     expect(within(pagination).queryByRole('button', { name: 'Próxima' })).not.toBeInTheDocument();
+  });
+
+  it('só mostra "Limpar filtros" quando há filtro ativo', async () => {
+    renderWithProviders(<TransactionsDashboard />);
+    const filters = await screen.findByRole('search', { name: 'Filtros' });
+
+    expect(
+      within(filters).queryByRole('button', { name: 'Limpar filtros' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('abre o detalhe ao clicar em qualquer parte da linha', async () => {
+    server.use(
+      http.get('*/api/transactions', () => HttpResponse.json(buildPage([buildTransaction()]))),
+    );
+
+    renderWithProviders(<TransactionsDashboard />);
+    const table = await screen.findByRole('table', { name: 'Transações' });
+    await userEvent.click(within(table).getByText('R$ 120,00'));
+
+    expect(navigation.push).toHaveBeenCalledWith(
+      '/transactions/01a12c49-2a9b-7529-b23c-05f14ddd4710',
+    );
   });
 
   it('atualiza sozinho o status enquanto há transação pendente', async () => {
