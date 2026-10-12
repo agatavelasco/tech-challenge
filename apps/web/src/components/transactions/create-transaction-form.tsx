@@ -3,8 +3,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createTransactionSchema, type CreateTransactionInput } from '@tech-challenge/contracts';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { ApiError } from '@/lib/api-client';
+import { formatCurrencyInput, parseCurrencyInput } from '@/lib/currency-mask';
 import { useCreateTransaction, useTransferTypes } from '@/lib/transaction-queries';
 import { Button } from '../ui/button';
 import { Field, inputClassName } from '../ui/field';
@@ -25,6 +26,7 @@ export function CreateTransactionForm() {
   const createTransaction = useCreateTransaction();
   const {
     register,
+    control,
     handleSubmit,
     setValue,
     setError,
@@ -127,20 +129,32 @@ export function CreateTransactionForm() {
 
       <Field
         id="value"
-        label="Valor (R$)"
+        label="Valor"
         error={errors.value?.message}
         hint="Acima de R$ 1.000,00 a transação é rejeitada pelo antifraude."
       >
-        <input
-          id="value"
-          type="number"
-          inputMode="decimal"
-          step="0.01"
-          min="0.01"
-          className={inputClassName}
-          aria-invalid={Boolean(errors.value)}
-          aria-describedby={describedBy('value', Boolean(errors.value)) ?? 'value-hint'}
-          {...register('value', { valueAsNumber: true })}
+        <Controller
+          name="value"
+          control={control}
+          render={({ field }) => (
+            <input
+              id="value"
+              ref={field.ref}
+              name={field.name}
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="R$ 0,00"
+              className={`${inputClassName} tabular-nums`}
+              value={formatCurrencyInput(field.value)}
+              onChange={(event) => {
+                field.onChange(parseCurrencyInput(event.target.value));
+              }}
+              onBlur={field.onBlur}
+              aria-invalid={Boolean(errors.value)}
+              aria-describedby={describedBy('value', Boolean(errors.value)) ?? 'value-hint'}
+            />
+          )}
         />
       </Field>
 
