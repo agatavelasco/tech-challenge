@@ -1,0 +1,30 @@
+{
+  "name": "@tech-challenge/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Schemas zod compartilhados: entrada e saída da API e eventos do Kafka",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tech-challenge/config": "workspace:*",
+    "vitest": "^4.1.11"
+  }
+}

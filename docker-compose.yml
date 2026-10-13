@@ -1,10 +1,9 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: challenge-postgres
     restart: unless-stopped
     ports:
-      - '5432:5432'
+      - '${POSTGRES_PORT:-5432}:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -19,17 +18,16 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.7.1
-    container_name: challenge-kafka
     restart: unless-stopped
     ports:
-      - '9092:9092'
+      - '${KAFKA_PORT:-9092}:9092'
     environment:
       CLUSTER_ID: challenge-kafka-cluster
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
       KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:${KAFKA_PORT:-9092}
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
@@ -48,17 +46,106 @@ services:
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
-    container_name: challenge-kafka-ui
     restart: unless-stopped
     depends_on:
       kafka:
         condition: service_healthy
     ports:
-      - '8080:8080'
+      - '${KAFKA_UI_PORT:-8080}:8080'
     environment:
       KAFKA_CLUSTERS_0_NAME: challenge
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       DYNAMIC_CONFIG_ENABLED: 'true'
+
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/transactions-api/Dockerfile
+      target: build
+    command:
+      [
+        'pnpm',
+        '--filter',
+        '@tech-challenge/transactions-api',
+        'exec',
+        'prisma',
+        'migrate',
+        'deploy',
+      ]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-challenge}?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+
+  transactions-api:
+    build:
+      context: .
+      dockerfile: apps/transactions-api/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${TRANSACTIONS_PORT:-3001}:3001'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-challenge}?schema=public
+      TRANSACTIONS_PORT: 3001
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: ${KAFKA_CLIENT_ID:-tech-challenge}
+      KAFKA_GROUP_ID_TRANSACTIONS: ${KAFKA_GROUP_ID_TRANSACTIONS:-transactions-consumer}
+      JWT_SECRET: ${JWT_SECRET:-segredo-local-apenas-para-desenvolvimento-troque}
+      JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
+      DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@desafio.local}
+      DEMO_USER_PASSWORD: ${DEMO_USER_PASSWORD:-demo12345}
+      WEB_ORIGIN: http://localhost:${WEB_PORT:-3000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3001/health || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  anti-fraud:
+    build:
+      context: .
+      dockerfile: apps/anti-fraud/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${ANTI_FRAUD_PORT:-3002}:3002'
+    environment:
+      ANTI_FRAUD_PORT: 3002
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_CLIENT_ID: ${KAFKA_CLIENT_ID:-tech-challenge}
+      KAFKA_GROUP_ID_ANTI_FRAUD: ${KAFKA_GROUP_ID_ANTI_FRAUD:-anti-fraud-consumer}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3002/health || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    environment:
+      TRANSACTIONS_API_URL: http://transactions-api:3001
+    depends_on:
+      transactions-api:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/transactions > /dev/null || exit 1']
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
 volumes:
   postgres-data:

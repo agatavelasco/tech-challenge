@@ -1,0 +1,10 @@
+{
+  "extends": "@tech-challenge/config/tsconfig/base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["tests", "playwright.config.ts"]
+}

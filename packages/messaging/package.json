@@ -1,0 +1,32 @@
+{
+  "name": "@tech-challenge/messaging",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Integração com o Kafka compartilhada pelos serviços: publisher, tópicos e dead letter",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tech-challenge/contracts": "workspace:*",
+    "kafkajs": "^2.2.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@tech-challenge/config": "workspace:*",
+    "vitest": "^4.1.11"
+  }
+}

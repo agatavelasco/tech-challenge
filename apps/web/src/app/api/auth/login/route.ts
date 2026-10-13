@@ -1,0 +1,47 @@
+import { loginResponseSchema } from '@tech-challenge/contracts';
+import type { NextRequest } from 'next/server';
+import { SESSION_COOKIE } from '@/lib/session';
+
+export async function POST(request: NextRequest) {
+  const apiUrl = process.env.TRANSACTIONS_API_URL;
+  if (!apiUrl) throw new Error('TRANSACTIONS_API_URL não configurada');
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(new URL('/auth/login', apiUrl), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: await request.text(),
+      cache: 'no-store',
+    });
+  } catch {
+    return Response.json(
+      {
+        statusCode: 502,
+        message:
+          'O serviço de transações está temporariamente indisponível. Tente novamente em instantes.',
+      },
+      { status: 502 },
+    );
+  }
+
+  if (!upstream.ok) {
+    return new Response(upstream.body, {
+      status: upstream.status,
+      headers: { 'content-type': upstream.headers.get('content-type') ?? 'application/json' },
+    });
+  }
+
+  const { accessToken, expiresIn } = loginResponseSchema.parse(await upstream.json());
+  const response = Response.json(null);
+  const cookie = [
+    `${SESSION_COOKIE}=${accessToken}`,
+    'Path=/',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${String(expiresIn)}`,
+    ...(request.nextUrl.protocol === 'https:' ? ['Secure'] : []),
+  ].join('; ');
+  response.headers.append('set-cookie', cookie);
+  return response;
+}
