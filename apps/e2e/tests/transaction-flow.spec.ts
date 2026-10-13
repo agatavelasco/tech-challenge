@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// Mesmo usuário de demonstração que o docker-compose cria na API.
 const DEMO_USER = {
   email: process.env.DEMO_USER_EMAIL ?? 'demo@desafio.local',
   password: process.env.DEMO_USER_PASSWORD ?? 'demo12345',
@@ -20,13 +19,11 @@ async function createTransaction(page: Page, { value, type }: { value: string; t
   const generateButtons = page.getByRole('button', { name: 'Gerar' });
   await generateButtons.nth(0).click();
   await generateButtons.nth(1).click();
-  await page.getByRole('combobox', { name: 'Tipo de transferência' }).selectOption({ label: type });
-  // Máscara de moeda: só dígitos, a partir dos centavos ("100000" → R$ 1.000,00).
+  await page.getByRole('combobox', { name: 'Tipo de transferência' }).click();
+  await page.getByRole('listbox').getByRole('option', { name: type }).click();
   await page.getByRole('textbox', { name: 'Valor' }).fill(value);
   await page.getByRole('button', { name: 'Criar transação' }).click();
   await expect(page).toHaveURL(/\/transactions\/[0-9a-f-]{36}$/);
-  // O Next mantém a página anterior oculta no DOM (para o voltar ser instantâneo):
-  // as verificações ficam restritas ao detalhe visível.
   return page.getByRole('article');
 }
 
@@ -37,7 +34,6 @@ test('sem sessão, o dashboard leva ao login e volta para a página pedida', asy
   await page.getByRole('textbox', { name: 'E-mail' }).fill(DEMO_USER.email);
   await page.getByLabel('Senha').fill('senha-errada');
   await page.getByRole('button', { name: 'Entrar' }).click();
-  // O Next também tem um role="alert" (anunciador de rotas): filtra pelo texto.
   await expect(
     page.getByRole('alert').filter({ hasText: 'E-mail ou senha inválidos.' }),
   ).toBeVisible();
@@ -56,7 +52,6 @@ test.describe('Fluxo de transação de ponta a ponta', () => {
     const detail = await createTransaction(page, { value: '100000', type: 'Pix' });
 
     await expect(detail.getByText('R$ 1.000,00')).toBeVisible();
-    // O antifraude responde de forma assíncrona; o detalhe atualiza sozinho.
     await expect(detail.getByText('Aprovada')).toBeVisible();
     await expect(detail.getByText('Análise antifraude concluída.')).toBeVisible();
   });

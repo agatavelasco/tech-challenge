@@ -17,7 +17,6 @@ export const TRANSFER_TYPES: TransferType[] = [
   { id: 2, name: 'TED' },
 ];
 
-/** Implementação em memória da porta de persistência, para testar regras sem banco. */
 export class InMemoryTransactionsRepository extends TransactionsRepository {
   readonly records: TransactionRecord[] = [];
   readonly outbox: OutboxMessage[] = [];

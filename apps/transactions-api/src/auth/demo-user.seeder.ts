@@ -3,10 +3,6 @@ import { APP_CONFIG, type AppConfig } from '../config/app-config.js';
 import { PasswordHasher } from './password-hasher.js';
 import { UsersRepository } from './users.repository.js';
 
-/**
- * Cria o usuário de demonstração definido no ambiente, para quem clona o projeto
- * conseguir entrar sem cadastro. Sem as variáveis, não faz nada.
- */
 @Injectable()
 export class DemoUserSeeder implements OnApplicationBootstrap {
   private readonly logger = new Logger(DemoUserSeeder.name);

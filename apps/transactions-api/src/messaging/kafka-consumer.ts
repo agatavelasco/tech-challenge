@@ -19,17 +19,11 @@ export function kafkaConsumerOptions(config: AppConfig): MicroserviceOptions {
       consumer: { groupId: config.KAFKA_GROUP_ID_TRANSACTIONS, allowAutoTopicCreation: false },
       subscribe: { fromBeginning: true },
       producer: { createPartitioner: Partitioners.DefaultPartitioner },
-      // Sem sufixo: o group id é exatamente o configurado no ambiente.
       postfixId: '',
     },
   };
 }
 
-/**
- * Sobe o consumidor depois do HTTP e sem derrubar a API se o Kafka estiver fora:
- * a criação de transações continua funcionando (o outbox guarda os eventos) e o
- * consumidor entra assim que o broker responder.
- */
 export async function startKafkaConsumer(
   app: INestApplication,
   kafka: Kafka,

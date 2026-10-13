@@ -10,7 +10,6 @@ const appConfigSchema = z.object({
 });
 export type AppConfig = z.infer<typeof appConfigSchema>;
 
-/** Falha na subida, com a lista do que falta, em vez de quebrar no primeiro uso. */
 export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const result = appConfigSchema.safeParse(env);
   if (!result.success) {

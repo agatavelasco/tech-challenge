@@ -10,10 +10,8 @@ export interface ScryptCost {
   p: number;
 }
 
-/** Parâmetros recomendados pela OWASP para o scrypt (N = 2^17, r = 8, p = 1). */
 export const DEFAULT_SCRYPT_COST: ScryptCost = { N: 2 ** 17, r: 8, p: 1 };
 
-/** Permite aos testes de regra usar um custo baixo; a produção usa sempre o padrão. */
 export const SCRYPT_COST = Symbol('SCRYPT_COST');
 
 function deriveKey(password: string, salt: Buffer, options: ScryptOptions): Promise<Buffer> {
@@ -25,11 +23,6 @@ function deriveKey(password: string, salt: Buffer, options: ScryptOptions): Prom
   });
 }
 
-/**
- * Hash de senha com scrypt (node:crypto): sem dependência nativa para compilar.
- * Formato armazenado: `scrypt$N$r$p$<sal base64>$<hash base64>` — os parâmetros
- * viajam com o hash, então o custo pode subir sem invalidar senhas antigas.
- */
 @Injectable()
 export class PasswordHasher {
   constructor(
@@ -54,7 +47,6 @@ export class PasswordHasher {
       p: Number(p),
       maxmem: MAX_MEMORY,
     });
-    // Comparação em tempo constante: o tempo de resposta não revela quantos bytes bateram.
     return key.length === expected.length && timingSafeEqual(key, expected);
   }
 }

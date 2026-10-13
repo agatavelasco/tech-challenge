@@ -10,9 +10,7 @@ const appConfigSchema = z.object({
   KAFKA_GROUP_ID_TRANSACTIONS: z.string().min(1).default('transactions-consumer'),
   OUTBOX_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(500),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().positive().max(1000).default(100),
-  // Eventos já publicados ficam um tempo para auditoria e reprocessamento manual.
   OUTBOX_RETENTION_HOURS: z.coerce.number().int().positive().default(72),
-  // HS256 com segredo curto é quebrável por força bruta: exige ao menos 32 caracteres.
   JWT_SECRET: z.string().min(32, 'JWT_SECRET precisa de pelo menos 32 caracteres'),
   JWT_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(3600),
   DEMO_USER_EMAIL: z.email().optional(),
@@ -21,7 +19,6 @@ const appConfigSchema = z.object({
 });
 export type AppConfig = z.infer<typeof appConfigSchema>;
 
-/** Falha na subida, com a lista do que falta, em vez de quebrar no primeiro uso. */
 export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const result = appConfigSchema.safeParse(env);
   if (!result.success) {

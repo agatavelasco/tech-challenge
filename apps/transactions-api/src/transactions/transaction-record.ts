@@ -1,6 +1,5 @@
 import type { TransactionStatus, TransferType } from '@tech-challenge/contracts';
 
-/** Transação como o domínio a enxerga, independente do Prisma. */
 export interface TransactionRecord {
   id: string;
   accountExternalIdDebit: string;
@@ -23,7 +22,6 @@ export interface PageRequest {
   take: number;
 }
 
-/** Evento a ser gravado no outbox junto com a mudança de estado que o originou. */
 export interface OutboxMessage {
   eventId: string;
   topic: string;

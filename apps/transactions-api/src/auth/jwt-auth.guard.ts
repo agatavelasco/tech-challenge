@@ -12,10 +12,6 @@ import { IS_PUBLIC } from './public.decorator.js';
 
 export type AuthenticatedRequest = Request & { user: AccessTokenPayload };
 
-/**
- * Guard global: negar por padrão. Uma rota nova nasce protegida e só fica aberta
- * com @Public() explícito.
- */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
@@ -24,7 +20,6 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Os consumidores Kafka passam pelos mesmos guards no app híbrido; eles não têm token.
     if (context.getType() !== 'http') return true;
 
     const isPublic = this.reflector.getAllAndOverride<boolean | undefined>(IS_PUBLIC, [

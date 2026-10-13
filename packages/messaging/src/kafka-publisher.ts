@@ -2,7 +2,6 @@ import { type Kafka, Partitioners, type Producer } from 'kafkajs';
 
 export interface OutgoingMessage {
   topic: string;
-  /** Mensagens com a mesma chave vão para a mesma partição e mantêm a ordem. */
   key: string;
   value: unknown;
   headers?: Record<string, string>;
@@ -12,14 +11,6 @@ export interface MessagePublisher {
   publish(messages: OutgoingMessage[]): Promise<void>;
 }
 
-/**
- * Producer idempotente com confirmação de todas as réplicas (acks = -1):
- * `publish` só resolve quando o Kafka garantiu a gravação, e lança em caso de falha
- * para que quem chamou decida entre tentar de novo ou desistir.
- *
- * A conexão é aberta no primeiro envio, e não na subida: o serviço continua de pé
- * (e aceitando escrita) mesmo com o broker indisponível.
- */
 export class KafkaPublisher implements MessagePublisher {
   private readonly producer: Producer;
   private connection: Promise<void> | undefined;
@@ -28,7 +19,6 @@ export class KafkaPublisher implements MessagePublisher {
     this.producer = kafka.producer({
       idempotent: true,
       maxInFlightRequests: 1,
-      // Particionador padrão do Kafka (murmur2 sobre a chave), compatível com outros clientes.
       createPartitioner: Partitioners.DefaultPartitioner,
     });
   }

@@ -9,9 +9,7 @@ import { createQueryClient } from '@/lib/query-client';
 export function Providers({ children }: { children: ReactNode }) {
   const router = useRouter();
 
-  // Um cliente por montagem: nunca compartilhado entre requisições no servidor.
   const [queryClient] = useState(() => {
-    // Sessão expirada no meio do uso: volta para o login e retorna à mesma tela depois.
     const redirectToLoginOnUnauthorized = (error: unknown) => {
       if (!(error instanceof ApiError) || error.status !== 401) return;
       const next = `${window.location.pathname}${window.location.search}`;

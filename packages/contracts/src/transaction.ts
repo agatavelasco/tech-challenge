@@ -4,7 +4,6 @@ export const TRANSACTION_STATUSES = ['pending', 'approved', 'rejected'] as const
 export const transactionStatusSchema = z.enum(TRANSACTION_STATUSES);
 export type TransactionStatus = z.infer<typeof transactionStatusSchema>;
 
-/** Valores acima deste limite são rejeitados pelo antifraude. */
 export const ANTI_FRAUD_MAX_APPROVED_VALUE = 1000;
 
 const CENTS_TOLERANCE = 1e-9;

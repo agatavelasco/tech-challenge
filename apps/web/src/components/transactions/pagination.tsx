@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
   isPageSizeOption,
@@ -5,6 +6,7 @@ import {
   type PageSizeOption,
 } from '@/lib/transaction-filters';
 import { Button } from '../ui/button';
+import { Select } from '../ui/select';
 
 interface PaginationProps {
   page: number;
@@ -17,7 +19,6 @@ interface PaginationProps {
 
 const SIBLINGS = 1;
 
-/** Primeira, última e as vizinhas da atual; `null` marca um intervalo omitido. */
 export function visiblePages(page: number, totalPages: number): (number | null)[] {
   const pages: (number | null)[] = [];
   for (let candidate = 1; candidate <= totalPages; candidate++) {
@@ -37,7 +38,6 @@ export function Pagination({
   onPageChange,
   onPageSizeChange,
 }: PaginationProps) {
-  // Com até 10 itens, nenhuma opção muda o que aparece na tela.
   if (total <= PAGE_SIZE_OPTIONS[0]) return null;
 
   const firstItem = (page - 1) * pageSize + 1;
@@ -46,30 +46,33 @@ export function Pagination({
   return (
     <nav
       aria-label="Paginação"
-      className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row"
+      className="flex flex-col items-center justify-between gap-3 rounded-b-2xl border-t border-slate-200 bg-slate-50/50 px-5 py-3 sm:flex-row"
     >
-      <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-slate-500">
         <p>
-          Mostrando <strong>{firstItem}</strong>–<strong>{lastItem}</strong> de{' '}
-          <strong>{total}</strong>
+          Mostrando{' '}
+          <strong className="font-semibold text-slate-900 tabular-nums">
+            {firstItem}–{lastItem}
+          </strong>{' '}
+          de <strong className="font-semibold text-slate-900 tabular-nums">{total}</strong>
         </p>
-        <label className="flex items-center gap-2">
-          Itens por página
-          <select
-            className="h-8 rounded-md border border-slate-300 bg-white px-2 text-sm"
-            value={pageSize}
-            onChange={(event) => {
-              const next = Number(event.target.value);
+        <div className="flex items-center gap-2">
+          <label htmlFor="page-size">Itens por página</label>
+          <Select
+            id="page-size"
+            size="sm"
+            className="w-20"
+            value={String(pageSize)}
+            onChange={(value) => {
+              const next = Number(value);
               if (isPageSizeOption(next)) onPageSizeChange(next);
             }}
-          >
-            {PAGE_SIZE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+            options={PAGE_SIZE_OPTIONS.map((option) => ({
+              value: String(option),
+              label: String(option),
+            }))}
+          />
+        </div>
       </div>
       {totalPages > 1 && (
         <ul className="flex items-center gap-1">
@@ -82,6 +85,7 @@ export function Pagination({
                 onPageChange(page - 1);
               }}
             >
+              <ChevronLeft aria-hidden />
               Anterior
             </Button>
           </li>
@@ -97,7 +101,7 @@ export function Pagination({
                   size="sm"
                   aria-current={candidate === page ? 'page' : undefined}
                   aria-label={`Página ${String(candidate)}`}
-                  className={cn('min-w-8')}
+                  className={cn('min-w-8 tabular-nums', candidate !== page && 'text-slate-600')}
                   onClick={() => {
                     onPageChange(candidate);
                   }}
@@ -117,6 +121,7 @@ export function Pagination({
               }}
             >
               Próxima
+              <ChevronRight aria-hidden />
             </Button>
           </li>
         </ul>

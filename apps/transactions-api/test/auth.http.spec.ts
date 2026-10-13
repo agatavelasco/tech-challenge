@@ -41,7 +41,6 @@ describe('Autenticação na API HTTP', () => {
       .useValue(new InMemoryTransactionsRepository())
       .compile();
     app = moduleRef.createNestApplication();
-    // init dispara o DemoUserSeeder, que cria o usuário de demonstração.
     await app.init();
   });
 

@@ -17,10 +17,6 @@ export class TransactionsService {
 
   constructor(private readonly repository: TransactionsRepository) {}
 
-  /**
-   * Nasce pendente: o resultado do antifraude chega depois, por evento. O evento de
-   * criação vai para o outbox na mesma transação do banco; o relay o publica no Kafka.
-   */
   async create(input: CreateTransactionInput): Promise<Transaction> {
     const transferType = await this.repository.findTransferType(input.transferTypeId);
     if (!transferType) {
@@ -65,10 +61,6 @@ export class TransactionsService {
     };
   }
 
-  /**
-   * Aplica o resultado do antifraude. Idempotente: a entrega do Kafka é pelo menos
-   * uma vez, então o mesmo resultado pode chegar repetido e deve ser inofensivo.
-   */
   async applyAntiFraudResult(
     transactionExternalId: string,
     status: ResolvedTransactionStatus,

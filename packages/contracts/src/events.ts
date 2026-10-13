@@ -6,15 +6,10 @@ export const TOPICS = {
   transactionStatusUpdated: 'transaction.status.updated',
 } as const;
 
-/** Mensagens que não passam na validação vão para `<tópico>.dlq` em vez de travar o consumidor. */
 export function deadLetterTopic(topic: string): string {
   return `${topic}.dlq`;
 }
 
-/**
- * Envelope comum a todos os eventos. `eventId` permite deduplicar,
- * `version` permite evoluir o payload sem quebrar consumidores antigos.
- */
 function eventEnvelopeSchema<TType extends string, TPayload extends z.ZodType>(
   type: TType,
   payload: TPayload,

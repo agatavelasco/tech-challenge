@@ -13,8 +13,6 @@ const INVALID_CREDENTIALS = 'E-mail ou senha inválidos';
 
 @Injectable()
 export class AuthService {
-  // Hash de uma senha qualquer: e-mail desconhecido também paga o custo do scrypt,
-  // para o tempo de resposta não revelar quais e-mails existem.
   private readonly dummyHash: Promise<string>;
 
   constructor(

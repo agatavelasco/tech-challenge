@@ -35,7 +35,6 @@ describe('Fluxo assíncrono da API de transações (Postgres e Kafka reais)', ()
     await resetDatabase(app.get(PrismaService));
     await startKafkaConsumer(app, app.get(KAFKA), config);
 
-    // O usuário de demonstração é criado na subida (DemoUserSeeder).
     const login = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ email: 'demo@desafio.local', password: 'demo12345' });
@@ -67,7 +66,6 @@ describe('Fluxo assíncrono da API de transações (Postgres e Kafka reais)', ()
     const transaction = created.body as Transaction;
     expect(transaction.transactionStatus.name).toBe('pending');
 
-    // O relay roda sozinho, no intervalo configurado.
     const isThisTransaction = (event: { key: string | null }) =>
       event.key === transaction.transactionExternalId;
     const events = await readMessages(kafka, 'transaction.created', {

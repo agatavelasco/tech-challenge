@@ -1,5 +1,6 @@
 'use client';
 
+import { Inbox, Plus, SearchX } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -34,7 +35,7 @@ export function TransactionsDashboard() {
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <section className="rounded-2xl border border-slate-200 bg-white shadow-xs">
       <TransactionFiltersBar filters={filters} onChange={navigate} />
 
       <p aria-live="polite" className="sr-only">
@@ -55,6 +56,7 @@ export function TransactionsDashboard() {
       ) : transactions.data.data.length === 0 ? (
         hasActiveFilters(filters) ? (
           <EmptyState
+            icon={<SearchX />}
             title="Nenhuma transação encontrada"
             description="Nenhuma transação corresponde aos filtros aplicados."
             action={
@@ -70,10 +72,12 @@ export function TransactionsDashboard() {
           />
         ) : (
           <EmptyState
+            icon={<Inbox />}
             title="Nenhuma transação ainda"
             description="As transações criadas aparecem aqui, com o status atualizado automaticamente."
             action={
               <Link href="/transactions/new" className={buttonVariants()}>
+                <Plus aria-hidden />
                 Criar transação
               </Link>
             }
@@ -82,7 +86,7 @@ export function TransactionsDashboard() {
       ) : (
         <>
           {hasDelayedAnalysis && (
-            <div className="border-b border-slate-200 p-4">
+            <div className="border-b border-slate-200 p-4 sm:px-5">
               <DelayedAnalysisNotice plural />
             </div>
           )}
@@ -92,7 +96,6 @@ export function TransactionsDashboard() {
             onPageChange={(page) => {
               navigate({ ...filters, page });
             }}
-            // Outro tamanho muda o que cabe em cada página: volta para a primeira.
             onPageSizeChange={(pageSize) => {
               navigate({ ...filters, page: 1, pageSize });
             }}

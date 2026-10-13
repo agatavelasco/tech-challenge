@@ -6,8 +6,6 @@ import { APP_CONFIG, type AppConfig } from './config/app-config.js';
 import { kafkaConsumerOptions, startKafkaConsumer } from './messaging/kafka-consumer.js';
 import { KAFKA } from './messaging/messaging.module.js';
 
-// Em desenvolvimento as variáveis vêm do .env da raiz do monorepo;
-// em container e no CI já estão no ambiente.
 const rootEnvFile = new URL('../../../.env', import.meta.url);
 if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 
@@ -18,7 +16,6 @@ async function bootstrap(): Promise<void> {
   app.connectMicroservice(kafkaConsumerOptions(config), { inheritAppConfig: true });
   app.enableShutdownHooks();
 
-  // HTTP só expõe o /health; o trabalho do serviço acontece no consumidor.
   await app.listen(config.ANTI_FRAUD_PORT);
   await startKafkaConsumer(app, app.get<Kafka>(KAFKA), config);
 }

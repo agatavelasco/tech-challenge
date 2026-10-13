@@ -1,9 +1,90 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-brand-50: #fdf2f6;
+  --color-brand-100: #fce7ef;
+  --color-brand-200: #f9cddf;
+  --color-brand-300: #f4a3c2;
+  --color-brand-400: #ec6a99;
+  --color-brand-500: #e23f78;
+  --color-brand-600: #d81656;
+  --color-brand-700: #b41047;
+  --color-brand-800: #94103d;
+  --color-brand-900: #7b1137;
+
+  --animate-status-settle: status-settle 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-node-pop: node-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-flow: flow 1.4s linear infinite;
+  --animate-fade-up: fade-up 400ms ease-out both;
+
+  @keyframes status-settle {
+    0% {
+      transform: scale(0.85);
+      box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 35%, transparent);
+    }
+    60% {
+      transform: scale(1.06);
+    }
+    100% {
+      transform: scale(1);
+      box-shadow: 0 0 0 8px transparent;
+    }
+  }
+
+  @keyframes node-pop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes flow {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 32px 0;
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 body {
   @apply bg-slate-50 text-slate-900 antialiased;
+  font-feature-settings: 'ss01';
+}
+
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='option']:not([aria-disabled='true']),
+  label[for],
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}
+
+::selection {
+  @apply bg-brand-100 text-brand-900;
 }

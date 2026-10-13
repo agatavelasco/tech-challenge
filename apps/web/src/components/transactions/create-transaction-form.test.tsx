@@ -4,10 +4,10 @@ import { http, HttpResponse } from 'msw';
 import { buildTransaction } from '@/test/fixtures';
 import { navigation } from '@/test/navigation';
 import { renderWithProviders } from '@/test/render';
+import { chooseOption } from '@/test/select';
 import { server } from '@/test/server';
 import { CreateTransactionForm } from './create-transaction-form';
 
-// Identificadores são colados, não digitados: é o uso real e mantém o teste rápido.
 async function pasteInto(name: string, text: string) {
   await userEvent.click(screen.getByRole('textbox', { name }));
   await userEvent.paste(text);
@@ -16,11 +16,10 @@ async function pasteInto(name: string, text: string) {
 async function fillValidForm() {
   await pasteInto('Conta de débito', '3fa85f64-5717-4562-b3fc-2c963f66afa6');
   await pasteInto('Conta de crédito', '9c1b6f3e-2a4d-4e8b-9f7a-1d2c3b4a5e6f');
-  await userEvent.selectOptions(
-    await screen.findByRole('combobox', { name: 'Tipo de transferência' }),
-    await screen.findByRole('option', { name: 'TED' }),
-  );
-  // Máscara de moeda: só dígitos, preenchidos a partir dos centavos.
+  await vi.waitFor(() => {
+    expect(screen.getByRole('combobox', { name: 'Tipo de transferência' })).toBeEnabled();
+  });
+  await chooseOption('Tipo de transferência', 'TED');
   await userEvent.type(screen.getByRole('textbox', { name: 'Valor' }), '25050');
 }
 

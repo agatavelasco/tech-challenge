@@ -107,8 +107,27 @@ pnpm dev                                               # API, antifraude e dashb
 ```
 
 O `.env` da raiz é lido pelos três apps. A API cria o usuário de demonstração
-(`DEMO_USER_EMAIL`/`DEMO_USER_PASSWORD`) na subida. O `JWT_SECRET` do exemplo serve só para
-desenvolvimento; o comando para gerar um segredo está comentado no próprio `.env.example`.
+(`DEMO_USER_EMAIL`/`DEMO_USER_PASSWORD`) na subida.
+
+### Variáveis de ambiente
+
+| Variável                                            | Para que serve                                                                       |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Credenciais e nome do banco                                                          |
+| `POSTGRES_PORT`, `DATABASE_URL`                     | Porta do Postgres no host e URL de conexão (as duas precisam concordar)              |
+| `KAFKA_PORT`, `KAFKA_BROKERS`                       | Porta do Kafka no host e endereço usado pelos apps (as duas precisam concordar)      |
+| `KAFKA_CLIENT_ID`, `KAFKA_GROUP_ID_*`               | Identificação do cliente e grupos de consumo                                         |
+| `TRANSACTIONS_PORT`, `ANTI_FRAUD_PORT`, `WEB_PORT`  | Portas da API, do antifraude e do dashboard                                          |
+| `WEB_ORIGIN`                                        | Origem do dashboard autorizada a chamar a API (CORS)                                 |
+| `TRANSACTIONS_API_URL`                              | Endereço da API usado pelo servidor do Next (o navegador fala só com o Next, `/api`) |
+| `JWT_SECRET`, `JWT_EXPIRES_IN_SECONDS`              | Segredo de assinatura do JWT (HS256, mínimo de 32 caracteres) e validade do token    |
+| `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD`             | Usuário criado na subida da API                                                      |
+
+O `JWT_SECRET` do exemplo serve só para desenvolvimento. Para gerar um:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
 
 Para criar uma migration depois de alterar `apps/transactions-api/prisma/schema.prisma`:
 

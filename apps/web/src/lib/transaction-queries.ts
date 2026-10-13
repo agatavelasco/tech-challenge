@@ -6,10 +6,6 @@ import { apiClient } from './api-client';
 import { isServiceUnavailable, RECONNECT_INTERVAL_MS } from './service-status';
 import { filtersToQuery, type TransactionFilters } from './transaction-filters';
 
-/**
- * Enquanto houver transação pendente na tela, a consulta se repete: o resultado do
- * antifraude chega fora do ciclo de request do usuário. Sem pendentes, o polling para.
- */
 export const PENDING_REFETCH_INTERVAL_MS = 3_000;
 
 const isPending = (transaction: Transaction) => transaction.transactionStatus.name === 'pending';
@@ -24,7 +20,6 @@ export function useTransactions(filters: TransactionFilters) {
   return useQuery({
     queryKey: transactionKeys.list(filters),
     queryFn: () => apiClient.listTransactions(filtersToQuery(filters)),
-    // Ao trocar de página ou filtro, a tabela anterior fica visível até a nova chegar.
     placeholderData: keepPreviousData,
     refetchInterval: (query) => {
       if (query.state.status === 'error') {
@@ -52,7 +47,6 @@ export function useTransferTypes() {
   return useQuery({
     queryKey: ['transfer-types'],
     queryFn: apiClient.listTransferTypes,
-    // Dado de referência: muda só com migration.
     staleTime: Number.POSITIVE_INFINITY,
   });
 }

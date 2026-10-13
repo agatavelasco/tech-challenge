@@ -38,7 +38,6 @@ function toRecord(row: TransactionRow): TransactionRecord {
     accountExternalIdDebit: row.accountExternalIdDebit,
     accountExternalIdCredit: row.accountExternalIdCredit,
     transferType: { id: row.transferType.id, name: row.transferType.name },
-    // Decimal(14,2) cabe sem perda num double: o contrato da API usa number.
     value: row.value.toNumber(),
     status: STATUS_FROM_DB[row.status],
     createdAt: row.createdAt,
@@ -114,7 +113,6 @@ export class PrismaTransactionsRepository extends TransactionsRepository {
     page: PageRequest,
   ): Promise<{ items: TransactionRecord[]; total: number }> {
     const where = toWhere(filters);
-    // Mesma transação de leitura: total e página enxergam o mesmo estado.
     const [rows, total] = await this.prisma.$transaction([
       this.prisma.transaction.findMany({
         where,

@@ -1,21 +1,26 @@
 'use client';
 
 import { TRANSACTION_STATUSES } from '@tech-challenge/contracts';
+import { CircleDot, Shapes, X } from 'lucide-react';
 import { STATUS_LABELS } from '@/lib/format';
-import type { TransactionFilters } from '@/lib/transaction-filters';
+import { hasActiveFilters, type TransactionFilters } from '@/lib/transaction-filters';
 import { useTransferTypes } from '@/lib/transaction-queries';
 import { Button } from '../ui/button';
-import { inputClassName } from '../ui/field';
+import { DatePicker } from '../ui/date-picker';
+import { Select } from '../ui/select';
+import { STATUS_OPTION_ICONS } from './option-icons';
+import { TransferTypeIcon } from './transfer-type-icon';
 
 interface FiltersBarProps {
   filters: TransactionFilters;
   onChange: (filters: TransactionFilters) => void;
 }
 
+const labelClassName = 'text-xs font-medium text-slate-500';
+
 export function TransactionFiltersBar({ filters, onChange }: FiltersBarProps) {
   const transferTypes = useTransferTypes();
 
-  // Qualquer mudança de filtro volta para a primeira página.
   const update = (patch: Partial<TransactionFilters>) => {
     onChange({ ...filters, ...patch, page: 1 });
   };
@@ -24,84 +29,97 @@ export function TransactionFiltersBar({ filters, onChange }: FiltersBarProps) {
     <form
       role="search"
       aria-label="Filtros"
-      className="grid gap-3 border-b border-slate-200 p-4 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+      className="grid gap-3 rounded-t-2xl border-b border-slate-200 bg-white p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-[repeat(4,minmax(0,1fr))_9.5rem]"
       onSubmit={(event) => {
         event.preventDefault();
       }}
     >
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        Status
-        <select
-          className={inputClassName}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-status" className={labelClassName}>
+          Status
+        </label>
+        <Select
+          id="filter-status"
           value={filters.status ?? ''}
-          onChange={(event) => {
-            const status = TRANSACTION_STATUSES.find((value) => value === event.target.value);
-            update({ status });
+          icon={<CircleDot />}
+          onChange={(value) => {
+            update({ status: TRANSACTION_STATUSES.find((status) => status === value) });
           }}
-        >
-          <option value="">Todos</option>
-          {TRANSACTION_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
-      </label>
+          options={[
+            { value: '', label: 'Todos', icon: <CircleDot /> },
+            ...TRANSACTION_STATUSES.map((status) => ({
+              value: status,
+              label: STATUS_LABELS[status],
+              icon: STATUS_OPTION_ICONS[status],
+            })),
+          ]}
+        />
+      </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        Tipo
-        <select
-          className={inputClassName}
-          value={filters.transferTypeId ?? ''}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-type" className={labelClassName}>
+          Tipo
+        </label>
+        <Select
+          id="filter-type"
+          value={filters.transferTypeId === undefined ? '' : String(filters.transferTypeId)}
+          icon={<Shapes />}
           disabled={!transferTypes.data}
-          onChange={(event) => {
-            update({ transferTypeId: event.target.value ? Number(event.target.value) : undefined });
+          onChange={(value) => {
+            update({ transferTypeId: value ? Number(value) : undefined });
           }}
-        >
-          <option value="">Todos</option>
-          {transferTypes.data?.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.name}
-            </option>
-          ))}
-        </select>
-      </label>
+          options={[
+            { value: '', label: 'Todos', icon: <Shapes /> },
+            ...(transferTypes.data ?? []).map((type) => ({
+              value: String(type.id),
+              label: type.name,
+              icon: <TransferTypeIcon name={type.name} />,
+            })),
+          ]}
+        />
+      </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        De
-        <input
-          type="date"
-          className={inputClassName}
-          value={filters.from ?? ''}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-from" className={labelClassName}>
+          De
+        </label>
+        <DatePicker
+          id="filter-from"
+          value={filters.from}
           max={filters.to}
-          onChange={(event) => {
-            update({ from: event.target.value || undefined });
+          onChange={(from) => {
+            update({ from });
           }}
         />
-      </label>
+      </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium text-slate-700">
-        Até
-        <input
-          type="date"
-          className={inputClassName}
-          value={filters.to ?? ''}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="filter-to" className={labelClassName}>
+          Até
+        </label>
+        <DatePicker
+          id="filter-to"
+          value={filters.to}
           min={filters.from}
-          onChange={(event) => {
-            update({ to: event.target.value || undefined });
+          onChange={(to) => {
+            update({ to });
           }}
         />
-      </label>
+      </div>
 
       <div className="flex items-end">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            onChange({ page: 1, pageSize: filters.pageSize });
-          }}
-        >
-          Limpar filtros
-        </Button>
+        {hasActiveFilters(filters) && (
+          <Button
+            variant="ghost"
+            className="w-full motion-safe:animate-fade-up"
+            onClick={() => {
+              onChange({ page: 1, pageSize: filters.pageSize });
+            }}
+          >
+            <X aria-hidden />
+            Limpar filtros
+          </Button>
+        )}
       </div>
     </form>
   );

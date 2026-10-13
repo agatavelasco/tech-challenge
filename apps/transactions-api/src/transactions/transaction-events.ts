@@ -10,6 +10,5 @@ export function transactionCreatedMessage(record: TransactionRecord): OutboxMess
     occurredAt: record.createdAt.toISOString(),
     payload: { transactionExternalId: record.id, value: record.value },
   };
-  // Chave = id da transação: todos os eventos dela caem na mesma partição, em ordem.
   return { eventId: event.eventId, topic: event.type, key: record.id, payload: event };
 }

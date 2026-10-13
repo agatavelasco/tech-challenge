@@ -57,10 +57,6 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       DYNAMIC_CONFIG_ENABLED: 'true'
 
-  # ---- Aplicações ----
-  # `docker compose up -d --build` sobe tudo. Para desenvolver com `pnpm dev`, suba só a
-  # infraestrutura: `docker compose up -d postgres kafka kafka-ui`.
-
   migrate:
     build:
       context: .
@@ -96,7 +92,6 @@ services:
       KAFKA_BROKERS: kafka:29092
       KAFKA_CLIENT_ID: ${KAFKA_CLIENT_ID:-tech-challenge}
       KAFKA_GROUP_ID_TRANSACTIONS: ${KAFKA_GROUP_ID_TRANSACTIONS:-transactions-consumer}
-      # Padrão só para rodar localmente; em qualquer ambiente real, defina JWT_SECRET.
       JWT_SECRET: ${JWT_SECRET:-segredo-local-apenas-para-desenvolvimento-troque}
       JWT_EXPIRES_IN_SECONDS: ${JWT_EXPIRES_IN_SECONDS:-3600}
       DEMO_USER_EMAIL: ${DEMO_USER_EMAIL:-demo@desafio.local}

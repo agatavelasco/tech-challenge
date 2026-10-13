@@ -7,7 +7,6 @@ declare module 'vitest' {
   }
 }
 
-// Mesma imagem do docker-compose: o teste roda contra o que roda em desenvolvimento.
 const KAFKA_IMAGE = 'confluentinc/cp-kafka:7.7.1';
 
 export default async function setup(project: TestProject): Promise<() => Promise<void>> {
