@@ -26,7 +26,7 @@ export default function LoginPage() {
 
         <div className="flex max-w-md flex-col gap-10">
           <p className="text-3xl leading-tight font-semibold tracking-tight">
-            Transações validadas em tempo real, do registro à decisão.
+            Transações validadas em tempo real
           </p>
           <ol className="flex flex-col">
             {FLOW.map(({ icon: Icon, title }, index) => (
