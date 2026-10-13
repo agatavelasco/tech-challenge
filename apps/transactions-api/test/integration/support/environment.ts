@@ -9,7 +9,6 @@ export function integrationConfig(overrides: Record<string, string> = {}): AppCo
     DATABASE_URL: inject('databaseUrl'),
     KAFKA_BROKERS: inject('kafkaBrokers'),
     KAFKA_CLIENT_ID: 'integration-test',
-    // Grupo novo por teste: cada um lê os tópicos do começo, sem herdar offsets.
     KAFKA_GROUP_ID_TRANSACTIONS: `transactions-${randomUUID()}`,
     KAFKA_TOPIC_PARTITIONS: '1',
     OUTBOX_POLL_INTERVAL_MS: '100',
@@ -37,11 +36,6 @@ export interface ReceivedMessage {
   value: unknown;
 }
 
-/**
- * Lê um tópico desde o início até `until` ser satisfeito ou o prazo estourar.
- * Os tópicos são compartilhados entre os arquivos de teste, então o critério
- * deve procurar a mensagem esperada, e não contar a partir da primeira.
- */
 export async function readMessages(
   kafka: Kafka,
   topic: string,
@@ -78,7 +72,6 @@ export async function readMessages(
   return received;
 }
 
-/** Repete a verificação até passar ou estourar o prazo — para efeitos assíncronos. */
 export async function eventually<T>(
   check: () => Promise<T>,
   { timeoutMs = 20_000, intervalMs = 200 } = {},

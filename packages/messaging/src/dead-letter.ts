@@ -5,7 +5,6 @@ export interface DeadLetter {
   sourceTopic: string;
   key: string | null;
   reason: string;
-  /** Conteúdo original, como chegou, para análise e reprocessamento manual. */
   originalValue: unknown;
 }
 
@@ -22,10 +21,6 @@ export function toDeadLetterMessage(deadLetter: DeadLetter, failedAt: Date): Out
   };
 }
 
-/**
- * Mensagem que nunca vai passar na validação não pode ser relançada como erro:
- * o consumidor a reprocessaria para sempre e travaria a partição.
- */
 export class DeadLetterPublisher {
   constructor(private readonly publisher: MessagePublisher) {}
 

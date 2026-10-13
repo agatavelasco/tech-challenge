@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Versão do pnpm vem do campo packageManager do package.json.
       - uses: pnpm/action-setup@v6
 
       - uses: actions/setup-node@v7
@@ -24,8 +23,6 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      # Persiste o cache local do turbo entre execuções do próprio CI.
-      # O cache nunca vem da máquina de quem desenvolve (ver DECISIONS.md).
       - uses: actions/cache@v6
         with:
           path: .turbo/cache
@@ -34,7 +31,6 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Navegador do e2e com as bibliotecas de sistema que ele precisa no Ubuntu.
       - run: pnpm --filter @tech-challenge/e2e exec playwright install --with-deps chromium
 
       - run: pnpm quality

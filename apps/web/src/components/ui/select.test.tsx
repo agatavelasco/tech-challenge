@@ -65,7 +65,6 @@ describe('Select', () => {
     await userEvent.keyboard('{ArrowDown}');
     expect(screen.getByRole('listbox')).toBeInTheDocument();
     await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-    // Pix → TED → (Boleto desabilitado) → volta para Pix
     await userEvent.keyboard('{Enter}');
 
     expect(onChange).toHaveBeenCalledWith('1');

@@ -19,7 +19,6 @@ interface PaginationProps {
 
 const SIBLINGS = 1;
 
-/** Primeira, última e as vizinhas da atual; `null` marca um intervalo omitido. */
 export function visiblePages(page: number, totalPages: number): (number | null)[] {
   const pages: (number | null)[] = [];
   for (let candidate = 1; candidate <= totalPages; candidate++) {
@@ -39,7 +38,6 @@ export function Pagination({
   onPageChange,
   onPageSizeChange,
 }: PaginationProps) {
-  // Com até 10 itens, nenhuma opção muda o que aparece na tela.
   if (total <= PAGE_SIZE_OPTIONS[0]) return null;
 
   const firstItem = (page - 1) * pageSize + 1;

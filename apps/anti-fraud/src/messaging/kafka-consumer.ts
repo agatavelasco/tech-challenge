@@ -19,13 +19,11 @@ export function kafkaConsumerOptions(config: AppConfig): MicroserviceOptions {
       consumer: { groupId: config.KAFKA_GROUP_ID_ANTI_FRAUD, allowAutoTopicCreation: false },
       subscribe: { fromBeginning: true },
       producer: { createPartitioner: Partitioners.DefaultPartitioner },
-      // Sem sufixo: o group id é exatamente o configurado no ambiente.
       postfixId: '',
     },
   };
 }
 
-/** Aguarda o Kafka com backoff em vez de derrubar o serviço na subida. */
 export async function startKafkaConsumer(
   app: INestApplication,
   kafka: Kafka,

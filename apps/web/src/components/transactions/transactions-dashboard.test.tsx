@@ -79,7 +79,6 @@ describe('TransactionsDashboard', () => {
       apiIsUp = true;
       await vi.advanceTimersByTimeAsync(RECONNECT_INTERVAL_MS);
 
-      // Sem clique: a tela volta sozinha quando o serviço responde.
       expect(await screen.findByRole('table', { name: 'Transações' })).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
@@ -147,7 +146,6 @@ describe('TransactionsDashboard', () => {
 
     await chooseOption('Status', 'Rejeitada');
 
-    // Trocar filtro volta para a primeira página.
     expect(navigation.replace).toHaveBeenLastCalledWith(
       '/transactions?status=rejected&transferTypeId=2',
       { scroll: false },
@@ -223,7 +221,6 @@ describe('TransactionsDashboard', () => {
 
     renderWithProviders(<TransactionsDashboard />);
 
-    // Uma página só, mas o seletor continua lá para voltar a 10 ou 20.
     const pagination = await screen.findByRole('navigation', { name: 'Paginação' });
     expect(requestedPageSizes[0]).toBe('30');
     expect(pagination).toHaveTextContent('Mostrando 1–25 de 25');

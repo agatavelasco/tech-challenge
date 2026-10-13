@@ -13,7 +13,6 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
       <aside className="relative hidden overflow-hidden bg-brand-600 p-12 text-white lg:flex lg:flex-col lg:justify-between">
-        {/* Logo em branco sobre a cor da marca. */}
         <Image
           src="/biud-logo.svg"
           alt="BIUD"
@@ -44,7 +43,6 @@ export default function LoginPage() {
         </div>
 
         <p className="text-xs text-white/60">Desafio técnico BIUD</p>
-        {/* Símbolo da marca, grande e vazado, como textura de fundo. */}
         <Image
           src="/biud-symbol.svg"
           alt=""
@@ -67,7 +65,6 @@ export default function LoginPage() {
             unoptimized
             className="lg:hidden"
           />
-          {/* O destino depois do login vem da URL (?next=), lida no cliente. */}
           <Suspense>
             <LoginForm />
           </Suspense>

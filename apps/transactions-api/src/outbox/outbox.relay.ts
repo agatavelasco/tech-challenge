@@ -18,15 +18,6 @@ interface PendingOutboxEvent {
   payload: unknown;
 }
 
-/**
- * Publica no Kafka os eventos gravados no outbox. A cada ciclo trava um lote de
- * eventos não publicados com FOR UPDATE SKIP LOCKED — várias instâncias da API podem
- * rodar o relay sem publicar o mesmo lote — envia e só então marca como publicado.
- * Se o Kafka falhar, a transação é desfeita e o lote volta a ficar disponível.
- *
- * Garantia: pelo menos uma vez. Uma queda entre o envio e o commit republica o lote,
- * por isso os consumidores são idempotentes.
- */
 @Injectable()
 export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdown {
   private readonly logger = new Logger(OutboxRelay.name);
@@ -57,7 +48,6 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
     await this.inFlight;
   }
 
-  /** Remove eventos publicados há mais tempo que a retenção. Devolve quantos removeu. */
   async purgePublished(now = new Date()): Promise<number> {
     const cutoff = new Date(now.getTime() - this.config.OUTBOX_RETENTION_HOURS * 3_600_000);
     const { count } = await this.prisma.outboxEvent.deleteMany({
@@ -66,7 +56,6 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
     return count;
   }
 
-  /** Publica um lote. Devolve quantos eventos foram publicados. */
   async publishPending(): Promise<number> {
     return this.prisma.$transaction(
       async (tx) => {
@@ -97,7 +86,6 @@ export class OutboxRelay implements OnApplicationBootstrap, OnApplicationShutdow
   }
 
   private tick(): void {
-    // Um ciclo por vez: se o anterior ainda está enviando, este é pulado.
     if (this.inFlight) return;
     this.inFlight = this.publishPending()
       .then(() => undefined)

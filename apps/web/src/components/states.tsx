@@ -22,7 +22,6 @@ export function LoadingState({ label }: { label: string }) {
   );
 }
 
-/** Ícone grande num quadro suave: dá rosto aos estados sem ilustração genérica. */
 export function StateIcon({
   children,
   tone = 'slate',

@@ -16,7 +16,6 @@ COPY --from=prune /repo/out/full/ .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo run build --filter=@tech-challenge/web
 
-# Saída standalone do Next: servidor e apenas os arquivos de node_modules que ele usa.
 FROM ${NODE_IMAGE} AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
 WORKDIR /app

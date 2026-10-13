@@ -8,7 +8,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <header className="sticky top-0 z-10 border-b border-slate-200/80 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
-        {/* Fio da cor da marca no topo: identidade sem disputar atenção com o conteúdo. */}
         <div aria-hidden className="h-0.5 bg-brand-600" />
         <nav
           aria-label="Principal"

@@ -1,10 +1,5 @@
 import type { Kafka } from 'kafkajs';
 
-/**
- * Cria os tópicos de forma idempotente na subida do serviço. Não depender da
- * criação automática do broker garante o número de partições e evita que um
- * consumidor se inscreva num tópico que ainda não existe.
- */
 export async function ensureTopics(
   kafka: Kafka,
   topics: string[],

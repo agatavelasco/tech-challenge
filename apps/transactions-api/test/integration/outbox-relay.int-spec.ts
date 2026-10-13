@@ -61,7 +61,6 @@ describe('OutboxRelay (Postgres e Kafka reais)', () => {
     const unreachable = new Kafka({
       brokers: ['127.0.0.1:1'],
       connectionTimeout: 300,
-      // O producer idempotente exige ao menos uma nova tentativa.
       retry: { retries: 1, initialRetryTime: 50 },
       logLevel: logLevel.NOTHING,
     });
@@ -91,7 +90,6 @@ describe('OutboxRelay (Postgres e Kafka reais)', () => {
 
     expect(published).toBe(20);
     const ids = new Set(created.map((record) => record.id));
-    // Lê por um tempo fixo, e não até achar as 20: uma duplicata chegaria depois delas.
     const messages = await readMessages(kafka, 'transaction.created', {
       until: () => false,
       timeoutMs: 8_000,

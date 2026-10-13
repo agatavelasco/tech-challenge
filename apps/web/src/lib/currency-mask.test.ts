@@ -1,6 +1,5 @@
 import { formatCurrencyInput, parseCurrencyInput } from './currency-mask';
 
-// O Intl separa "R$" do número com espaço não separável.
 const brl = (text: string) => text.replace(' ', ' ');
 
 describe('máscara de moeda', () => {
@@ -23,7 +22,6 @@ describe('máscara de moeda', () => {
   });
 
   it('apagar o último dígito volta os centavos para a direita', () => {
-    // "R$ 10,00" com backspace vira "R$ 10,0" → 1,00
     expect(parseCurrencyInput('R$ 10,0')).toBe(1);
   });
 

@@ -32,7 +32,6 @@ const errorBodySchema = z.object({
 const DEFAULT_ERROR_MESSAGE = 'Algo deu errado. Tente novamente.';
 
 async function request<T>(path: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
-  // O navegador só fala com o próprio Next (/api); o Next encaminha para a API.
   const url = new URL(`/api${path}`, window.location.origin);
 
   const headers = new Headers(init?.headers);
@@ -56,14 +55,11 @@ async function request<T>(path: string, schema: z.ZodType<T>, init?: RequestInit
     );
   }
 
-  // A resposta também é validada: se a API mudar o contrato, o erro aparece aqui,
-  // e não como `undefined` perdido na tela.
   return schema.parse(body);
 }
 
 function toSearchParams(query: Partial<ListTransactionsQuery>): string {
   const params = new URLSearchParams();
-  // Filtro ausente fica fora da URL, em vez de virar "undefined".
   for (const [key, value] of Object.entries(query) as [string, string | number | undefined][]) {
     if (value !== undefined) params.set(key, String(value));
   }
@@ -87,7 +83,6 @@ export const apiClient = {
   listTransferTypes: (): Promise<TransferType[]> =>
     request('/transfer-types', z.array(transferTypeSchema)),
 
-  // Login e logout são tratados pelo próprio Next, que guarda o token em cookie httpOnly.
   login: (input: LoginInput): Promise<null> =>
     request('/auth/login', z.null(), {
       method: 'POST',

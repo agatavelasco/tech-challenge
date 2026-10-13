@@ -11,7 +11,6 @@ export default function TransactionsPage() {
           Transações
         </h1>
       </header>
-      {/* Os filtros vêm da URL (useSearchParams): o restante da página é pré-renderizado. */}
       <Suspense fallback={<LoadingState label="Carregando transações" />}>
         <TransactionsDashboard />
       </Suspense>

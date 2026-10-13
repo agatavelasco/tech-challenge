@@ -6,7 +6,6 @@ import { cn } from '@/lib/cn';
 
 interface DatePickerProps {
   id?: string;
-  /** Data no formato AAAA-MM-DD, o mesmo do <input type="date">. */
   value?: string | undefined;
   onChange: (value: string | undefined) => void;
   min?: string | undefined;
@@ -20,7 +19,6 @@ const monthFormat = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'num
 const longFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' });
 const shortFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
 
-// Datas locais (sem fuso): AAAA-MM-DD ↔ Date à meia-noite do dia.
 function parseIsoDate(value: string | undefined): Date | undefined {
   if (!value) return undefined;
   const [year, month, day] = value.split('-').map(Number);
@@ -28,7 +26,6 @@ function parseIsoDate(value: string | undefined): Date | undefined {
   return new Date(year, month - 1, day);
 }
 
-/** "outubro de 2026" → "Outubro de 2026" (o CSS capitalize afetaria o "de"). */
 function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -38,7 +35,6 @@ function toIsoDate(date: Date): string {
   return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-/** 6 semanas a partir do domingo anterior ao dia 1: a grade não muda de altura. */
 function monthGrid(month: Date): Date[] {
   const first = new Date(month.getFullYear(), month.getMonth(), 1);
   const start = new Date(first);
@@ -50,10 +46,6 @@ function monthGrid(month: Date): Date[] {
   });
 }
 
-/**
- * Calendário do projeto: abre abaixo do campo, com a paleta da marca e os limites
- * `min`/`max` (o "de" não passa do "até"). O rótulo vem de um <label htmlFor={id}>.
- */
 export function DatePicker({
   id,
   value,

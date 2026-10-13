@@ -1,11 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/session';
 
-/**
- * Backend for frontend: o navegador chama /api/* no próprio Next, que encaminha para
- * a API de transações. O endereço da API fica só no servidor, não há CORS, e é aqui
- * que o token de autenticação (cookie httpOnly) vira o header Authorization.
- */
 const FORWARDED_REQUEST_HEADERS = ['accept', 'content-type'];
 const FORWARDED_RESPONSE_HEADERS = ['content-type'];
 

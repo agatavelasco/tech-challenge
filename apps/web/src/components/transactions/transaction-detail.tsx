@@ -51,7 +51,6 @@ export function TransactionDetail() {
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs motion-safe:animate-fade-up">
-      {/* Faixa no topo na cor do status: muda junto com o resultado da análise. */}
       <div
         aria-hidden
         className={cn(

@@ -1,6 +1,3 @@
-// Sobe a stack num projeto compose isolado (portas próprias, volumes descartáveis),
-// roda o Playwright e derruba tudo — inclusive quando os testes falham.
-// Com E2E_BASE_URL definido, testa um ambiente já no ar e não mexe em containers.
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 

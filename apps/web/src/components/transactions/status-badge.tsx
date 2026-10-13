@@ -18,10 +18,6 @@ const ICONS = {
   rejected: <CircleX aria-hidden className="size-3.5" />,
 } satisfies Record<TransactionStatus, React.ReactNode>;
 
-/**
- * O badge anima só quando o status muda diante de quem está olhando (pendente →
- * resultado), e não ao carregar a página: a animação marca o momento da decisão.
- */
 export function StatusBadge({ status }: { status: TransactionStatus }) {
   const previous = useRef(status);
   const [justChanged, setJustChanged] = useState(false);

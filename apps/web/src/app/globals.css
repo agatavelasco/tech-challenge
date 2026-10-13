@@ -3,7 +3,6 @@
 @theme {
   --font-sans: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 
-  /* Escala da cor da marca BIUD; 600 é a cor do logo (#D81656). */
   --color-brand-50: #fdf2f6;
   --color-brand-100: #fce7ef;
   --color-brand-200: #f9cddf;
@@ -20,7 +19,6 @@
   --animate-flow: flow 1.4s linear infinite;
   --animate-fade-up: fade-up 400ms ease-out both;
 
-  /* Badge que acabou de mudar de status: pequeno salto e um anel que se dissipa. */
   @keyframes status-settle {
     0% {
       transform: scale(0.85);
@@ -46,7 +44,6 @@
     }
   }
 
-  /* Faixas que correm pelo trecho em análise da linha do tempo. */
   @keyframes flow {
     from {
       background-position: 0 0;
@@ -73,7 +70,6 @@ body {
   font-feature-settings: 'ss01';
 }
 
-/* O Tailwind 4 deixa botões com cursor padrão; aqui tudo que é clicável mostra a mão. */
 @layer base {
   button:not(:disabled),
   [role='button']:not([aria-disabled='true']),

@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { Providers } from './providers';
 import './globals.css';
 
-// Baixada no build e servida pelo próprio app: sem requisição ao Google no navegador.
 const figtree = Figtree({ subsets: ['latin'], variable: '--font-figtree', display: 'swap' });
 
 export const metadata: Metadata = {

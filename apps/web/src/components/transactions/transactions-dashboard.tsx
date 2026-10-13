@@ -35,8 +35,6 @@ export function TransactionsDashboard() {
   };
 
   return (
-    // Sem overflow-hidden no card: ele cortaria o calendário e os dropdowns abertos.
-    // Os cantos arredondados ficam nas partes de cima (filtros) e de baixo (tabela/paginação).
     <section className="rounded-2xl border border-slate-200 bg-white shadow-xs">
       <TransactionFiltersBar filters={filters} onChange={navigate} />
 
@@ -98,7 +96,6 @@ export function TransactionsDashboard() {
             onPageChange={(page) => {
               navigate({ ...filters, page });
             }}
-            // Outro tamanho muda o que cabe em cada página: volta para a primeira.
             onPageSizeChange={(pageSize) => {
               navigate({ ...filters, page: 1, pageSize });
             }}

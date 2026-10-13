@@ -15,7 +15,6 @@ import { cn } from '@/lib/cn';
 export interface SelectOption {
   value: string;
   label: string;
-  /** Ícone da opção; aparece também no campo quando ela está selecionada. */
   icon?: ReactNode;
   disabled?: boolean;
 }
@@ -26,7 +25,6 @@ interface SelectProps {
   onChange: (value: string) => void;
   options: SelectOption[];
   placeholder?: string;
-  /** Ícone do campo quando a opção selecionada não tem ícone próprio. */
   icon?: ReactNode;
   disabled?: boolean;
   invalid?: boolean;
@@ -37,11 +35,6 @@ interface SelectProps {
   'aria-describedby'?: string | undefined;
 }
 
-/**
- * Dropdown do projeto no padrão ARIA de combobox com listbox: abre abaixo do campo,
- * navega por teclado (setas, Home/End, Enter, Esc) e o ícone do campo acompanha a
- * opção escolhida. O rótulo vem de um <label htmlFor={id}> externo.
- */
 export function Select({
   id,
   value,
@@ -203,7 +196,6 @@ export function Select({
                 onMouseEnter={() => {
                   setActiveIndex(index);
                 }}
-                // Mantém o foco no campo: o clique escolhe sem tirar o foco do combobox.
                 onMouseDown={(event) => {
                   event.preventDefault();
                 }}

@@ -50,8 +50,6 @@ export function CreateTransactionForm() {
       const created = await createTransaction.mutateAsync(input);
       router.push(`/transactions/${created.transactionExternalId}`);
     } catch (error) {
-      // A API valida com o mesmo schema, mas pode recusar o que só ela sabe
-      // (ex.: tipo inexistente): o erro volta para o campo certo.
       const fieldErrors = error instanceof ApiError ? Object.entries(error.fieldErrors) : [];
       for (const [field, messages] of fieldErrors) {
         if (isFormField(field) && messages?.[0]) setError(field, { message: messages[0] });
@@ -147,7 +145,6 @@ export function CreateTransactionForm() {
             <Select
               id="transferTypeId"
               ref={field.ref}
-              // Antes da escolha o valor é undefined em runtime, apesar do tipo number.
               value={Number.isFinite(field.value) ? String(field.value) : ''}
               onChange={(value) => {
                 field.onChange(Number(value));

@@ -9,7 +9,6 @@ export interface UserRecord {
 
 export abstract class UsersRepository {
   abstract findByEmail(email: string): Promise<UserRecord | null>;
-  /** Cria se não existir; não altera a senha de um usuário existente. */
   abstract createIfMissing(email: string, passwordHash: string): Promise<boolean>;
 }
 

@@ -12,7 +12,6 @@ export function LogoutButton() {
 
   const logout = async () => {
     await apiClient.logout();
-    // Nada da sessão anterior pode aparecer para o próximo usuário.
     queryClient.clear();
     router.replace('/login');
   };

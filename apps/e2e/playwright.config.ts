@@ -4,7 +4,6 @@ const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 export default defineConfig({
   testDir: 'tests',
-  // O fluxo depende do Kafka e do antifraude: os testes compartilham a stack e rodam em sequência.
   workers: 1,
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),

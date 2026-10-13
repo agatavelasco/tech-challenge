@@ -12,7 +12,6 @@ import { TransferTypeIcon } from './transfer-type-icon';
 const dateFormat = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' });
 const timeFormat = new Intl.DateTimeFormat('pt-BR', { timeStyle: 'medium' });
 
-/** Faixa lateral da linha: pendentes se destacam enquanto aguardam a análise. */
 const ROW_ACCENT = {
   pending: 'before:bg-amber-400',
   approved: 'before:bg-transparent',
@@ -50,14 +49,11 @@ export function TransactionsTable({ transactions }: { transactions: Transaction[
             <tr
               key={transaction.transactionExternalId}
               className="group cursor-pointer transition-colors hover:bg-brand-50/40"
-              // A linha inteira abre o detalhe. O link do identificador continua sendo o
-              // caminho por teclado e leitor de tela (e permite abrir em nova aba).
               onClick={(event) => {
                 if ((event.target as HTMLElement).closest('a')) return;
                 router.push(`/transactions/${transaction.transactionExternalId}`);
               }}
             >
-              {/* A faixa fica na primeira célula: pseudo-elemento na <tr> viraria uma coluna. */}
               <td
                 className={cn(
                   'relative py-3.5 pr-4 pl-5',

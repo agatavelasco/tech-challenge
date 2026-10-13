@@ -2,11 +2,6 @@ import { loginResponseSchema } from '@tech-challenge/contracts';
 import type { NextRequest } from 'next/server';
 import { SESSION_COOKIE } from '@/lib/session';
 
-/**
- * Faz o login na API e guarda o token num cookie httpOnly: o JavaScript da página não
- * tem acesso a ele, então um XSS não consegue roubá-lo. O token volta para a API pelo
- * proxy /api/[...path].
- */
 export async function POST(request: NextRequest) {
   const apiUrl = process.env.TRANSACTIONS_API_URL;
   if (!apiUrl) throw new Error('TRANSACTIONS_API_URL não configurada');

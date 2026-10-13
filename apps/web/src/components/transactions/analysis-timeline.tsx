@@ -30,11 +30,6 @@ const RESULT = {
   },
 } satisfies Record<TransactionStatus, unknown>;
 
-/**
- * Criada → Análise antifraude → Resultado. Os nós e conexões continuam no DOM quando
- * o status muda pelo polling, então a passagem de "em análise" para o resultado é uma
- * transição: o trecho final se preenche na cor da decisão e o ícone do resultado entra.
- */
 export function AnalysisTimeline({ status, createdAt }: AnalysisTimelineProps) {
   const isPending = status === 'pending';
   const result = RESULT[status];
@@ -66,14 +61,12 @@ export function AnalysisTimeline({ status, createdAt }: AnalysisTimelineProps) {
       <Step
         connector={
           <>
-            {/* Em análise: faixas correndo, indicando trabalho em andamento. */}
             <span
               className={cn(
                 'absolute inset-0 bg-[repeating-linear-gradient(90deg,var(--color-amber-400)_0_8px,transparent_8px_16px)] bg-[length:32px_100%] transition-opacity duration-300 motion-safe:animate-flow',
                 isPending ? 'opacity-100' : 'opacity-0',
               )}
             />
-            {/* Resolvida: o trecho se preenche da esquerda para a direita. */}
             <span
               className={cn(
                 'absolute inset-y-0 left-0 transition-[width] duration-700 ease-out',

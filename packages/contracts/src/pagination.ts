@@ -4,10 +4,6 @@ import { transactionSchema, transactionStatusSchema } from './transaction.js';
 export const DEFAULT_PAGE_SIZE = 10;
 export const MAX_PAGE_SIZE = 100;
 
-/**
- * Query string chega como texto: os campos numéricos e de data são convertidos
- * aqui para que o mesmo schema sirva à API e aos filtros do dashboard.
- */
 export const listTransactionsQuerySchema = z
   .object({
     page: z.coerce

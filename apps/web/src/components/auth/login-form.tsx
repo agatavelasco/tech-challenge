@@ -9,7 +9,6 @@ import { ApiError, apiClient } from '@/lib/api-client';
 import { Button } from '../ui/button';
 import { Field, InputIcon, inputClassName } from '../ui/field';
 
-/** Só caminhos internos: `next=https://site-malicioso` não pode virar redirecionamento. */
 function safeNextPath(next: string | null): string {
   return next?.startsWith('/') && !next.startsWith('//') ? next : '/transactions';
 }

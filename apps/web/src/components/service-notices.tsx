@@ -2,7 +2,6 @@ import { CloudOff, Hourglass, RefreshCw } from 'lucide-react';
 import { StateIcon } from './states';
 import { Button } from './ui/button';
 
-/** Análise demorando: a transação está salva e será processada quando o serviço voltar. */
 export function DelayedAnalysisNotice({ plural = false }: { plural?: boolean }) {
   return (
     <div
@@ -30,7 +29,6 @@ export function DelayedAnalysisNotice({ plural = false }: { plural?: boolean }) 
   );
 }
 
-/** Serviço fora do ar: a tela tenta reconectar sozinha e avisa que vai voltar. */
 export function ServiceUnavailableState({ onRetry }: { onRetry: () => void }) {
   return (
     <div role="alert" className="flex flex-col items-center gap-2 px-6 py-14 text-center">

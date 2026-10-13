@@ -13,7 +13,6 @@ declare module 'vitest' {
 
 const appRoot = fileURLToPath(new URL('../../..', import.meta.url));
 
-// Mesmas imagens do docker-compose: o teste roda contra o que roda em desenvolvimento.
 const POSTGRES_IMAGE = 'postgres:16-alpine';
 const KAFKA_IMAGE = 'confluentinc/cp-kafka:7.7.1';
 
@@ -28,7 +27,6 @@ export default async function setup(project: TestProject): Promise<() => Promise
   ]);
 
   const databaseUrl = postgres.getConnectionUri();
-  // As migrations reais, as mesmas do deploy: o teste também valida o SQL versionado.
   execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
     cwd: appRoot,
     env: { ...process.env, DATABASE_URL: databaseUrl },

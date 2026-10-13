@@ -1,9 +1,5 @@
 import { vi } from 'vitest';
 
-/**
- * Substitui o roteador do Next nos testes: a URL é um estado em memória, e
- * replace/push a alteram como no navegador.
- */
 export const navigation = {
   pathname: '/transactions',
   searchParams: new URLSearchParams(),

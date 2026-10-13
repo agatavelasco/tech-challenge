@@ -9,10 +9,6 @@ interface FieldProps {
   children: ReactNode;
 }
 
-/**
- * Rótulo, controle e mensagem de erro ligados por id: o leitor de tela anuncia o
- * erro junto com o campo (aria-describedby é responsabilidade do controle filho).
- */
 export function Field({ id, label, error, hint, children }: FieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -38,7 +34,6 @@ export function Field({ id, label, error, hint, children }: FieldProps) {
 export const inputClassName =
   'h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 hover:border-slate-300 focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15 disabled:bg-slate-50 disabled:text-slate-400 aria-invalid:border-red-400 aria-invalid:focus:ring-red-500/15';
 
-/** Ícone decorativo à esquerda dentro de um input/select (o controle leva `pl-9`). */
 export function InputIcon({ children }: { children: ReactNode }) {
   return (
     <span

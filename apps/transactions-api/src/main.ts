@@ -6,8 +6,6 @@ import { APP_CONFIG, type AppConfig } from './config/app-config.js';
 import { kafkaConsumerOptions, startKafkaConsumer } from './messaging/kafka-consumer.js';
 import { KAFKA } from './messaging/messaging.module.js';
 
-// Em desenvolvimento as variáveis vêm do .env da raiz do monorepo;
-// em container e no CI já estão no ambiente.
 const rootEnvFile = new URL('../../../.env', import.meta.url);
 if (existsSync(rootEnvFile)) process.loadEnvFile(rootEnvFile);
 

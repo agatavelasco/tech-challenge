@@ -21,7 +21,6 @@ const labelClassName = 'text-xs font-medium text-slate-500';
 export function TransactionFiltersBar({ filters, onChange }: FiltersBarProps) {
   const transferTypes = useTransferTypes();
 
-  // Qualquer mudança de filtro volta para a primeira página.
   const update = (patch: Partial<TransactionFilters>) => {
     onChange({ ...filters, ...patch, page: 1 });
   };
@@ -108,8 +107,6 @@ export function TransactionFiltersBar({ filters, onChange }: FiltersBarProps) {
         />
       </div>
 
-      {/* Só aparece quando há o que limpar; a coluna tem largura fixa para os campos não
-          mudarem de tamanho quando o botão aparece. */}
       <div className="flex items-end">
         {hasActiveFilters(filters) && (
           <Button

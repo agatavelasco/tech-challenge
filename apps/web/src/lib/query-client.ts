@@ -1,7 +1,6 @@
 import { QueryClient, type QueryClientConfig } from '@tanstack/react-query';
 import { ApiError } from './api-client';
 
-/** Erro do cliente (4xx) não melhora com nova tentativa; rede e 5xx podem melhorar. */
 function shouldRetry(failureCount: number, error: unknown): boolean {
   if (error instanceof ApiError && error.status >= 400 && error.status < 500) return false;
   return failureCount < 2;
