@@ -18,13 +18,14 @@ foi considerado e por quê.
   [validação do formulário](#validação-do-formulário)
 - **Testes e entrega:** [test runner](#test-runner) · [estratégia](#estratégia-de-testes) ·
   [ponta a ponta](#testes-ponta-a-ponta) · [containers](#containers)
+- **Interface:** [identidade visual](#identidade-visual)
 - **[Volume alto de escritas e leituras concorrentes](#volume-alto-de-escritas-e-leituras-concorrentes)**
 
 ## Organização do projeto
 
 **Decisão:** monorepo com pnpm workspaces e Turborepo como executor de tarefas —
-`apps/transactions-api`, `apps/anti-fraud`, `apps/web`, `packages/contracts` e
-`packages/config`. Apps só importam de `packages/*`, nunca entre si.
+`apps/transactions-api`, `apps/anti-fraud`, `apps/web` e `apps/e2e`; `packages/contracts`,
+`packages/messaging` e `packages/config`. Apps só importam de `packages/*`, nunca entre si.
 
 **Alternativas consideradas:** um repositório por serviço; pnpm workspaces sem orquestrador
 (ordem codificada nos scripts ou em `postinstall`); Nx.
@@ -81,8 +82,8 @@ ESLint). Com o lint ficando lento, o oxlint seria o primeiro candidato.
 ## Contrato compartilhado e validação
 
 **Decisão:** schemas zod no pacote `contracts` são a única definição de entrada, resposta e
-eventos. A API valida com eles (via `ZodValidationPipe`), o dashboard usará os mesmos no
-formulário e os consumidores Kafka validarão cada mensagem recebida. Erros de validação
+eventos. A API valida com eles (via `ZodValidationPipe`), o dashboard usa os mesmos no
+formulário e os consumidores Kafka validam cada mensagem recebida. Erros de validação
 voltam por campo: `{ statusCode, message, errors: { campo: [mensagens] } }`.
 
 **Alternativas consideradas:** `class-validator` com DTOs (padrão do NestJS); OpenAPI como
@@ -327,7 +328,11 @@ scripts de instalação.
 
 **Por quê:** ataques de cadeia de suprimentos costumam ser publicados e removidos em
 poucas horas — a janela que a política cobre. Scripts de instalação são o principal vetor
-desses ataques; cada liberação é explícita e justificada no `pnpm-workspace.yaml`.
+desses ataques, então cada um é decidido de forma explícita no `allowBuilds` do
+`pnpm-workspace.yaml`: liberados só os do Prisma, que baixam o engine de migrations;
+negados os do `ssh2`, `cpu-features` e `protobufjs` (otimizações nativas opcionais e uma
+checagem de versão, dependências do Testcontainers que funcionam sem eles) e o do
+`unrs-resolver`, que já vem com binário pré-compilado.
 
 ## Containers
 
@@ -488,12 +493,18 @@ a linha do tempo do detalhe preenche o trecho final na cor do resultado, e o bad
 apenas quando o status muda diante de quem está olhando. Tudo respeita
 `prefers-reduced-motion`.
 
-**Alternativas consideradas:** biblioteca de componentes pronta (shadcn/ui, MUI); status
-nas cores da marca; ilustrações em vez de ícones.
+Dropdown e calendário são componentes do próprio projeto (`components/ui/select.tsx` e
+`date-picker.tsx`), no padrão ARIA de combobox e de diálogo, com navegação por teclado.
 
-**Por quê:** a mudança é só visual — textos, papéis acessíveis e comportamento seguem
-iguais, e a suíte de testes passou sem nenhuma alteração. Trocar de biblioteca de
-componentes mudaria a estrutura do frontend sem ganho para o requisito. O vermelho de
+**Alternativas consideradas:** biblioteca de componentes pronta (shadcn/ui, MUI); `<select>`
+e `<input type="date">` nativos; status nas cores da marca; ilustrações em vez de ícones.
+
+**Por quê:** regras, contratos e fluxos continuam os mesmos; a mudança é de apresentação.
+Trocar de biblioteca de componentes mudaria a estrutura do frontend sem ganho para o
+requisito. Os controles nativos não aceitam estilo na lista aberta nem no calendário, e o
+calendário muda de aparência e de formato de data conforme o navegador; dois componentes
+próprios, pequenos e sem dependência, dão a mesma aparência em todo lugar e respeitam os
+limites do filtro (a data inicial não passa da final). O vermelho de
 "rejeitada" é próximo do magenta da marca; manter a marca fora dos status e diferenciar por
 ícone evita que um botão pareça um erro (ou o contrário) e não depende só de cor, o que
 também atende quem tem deficiência na percepção de cores.
